@@ -1,0 +1,58 @@
+name: Final Production Mic Fix
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".final-production-mic-trigger"]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      RELEASE_SHA: 495cc7b615858e2235dd1e6bec2a412c92e64fae
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify exact release source
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          node --check app-runtime.js
+          node --check api/gemini.js
+          node --check api/health.js
+      - name: Deploy exact verified source to production once
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          PROD_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
+      - name: Verify production fingerprint
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          HEALTH=$(npx vercel curl /api/health --deployment "$PROD_URL")
+          echo "$HEALTH"
+          node -e '
+            const h=JSON.parse(process.argv[1]);
+            if(!h.ok) throw new Error("health not ok");
+            if(h.service!=="bolna-gemini-gateway") throw new Error("wrong service");
+            if(h.runtime!=="single-v1") throw new Error("wrong runtime");
+            if(h.environment!=="production") throw new Error(`wrong environment: ${h.environment}`);
+            if(h.commit!==process.env.RELEASE_SHA) throw new Error(`wrong commit: ${h.commit}`);
+          ' "$HEALTH"
+      - name: Verify stable production hostname
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          LIVE=$(npx vercel curl /api/health --deployment https://hinglish-companion.vercel.app)
+          node -e 'const h=JSON.parse(process.argv[1]); if(h.commit!==process.env.RELEASE_SHA||h.environment!=="production") throw new Error("stable production hostname mismatch");' "$LIVE"

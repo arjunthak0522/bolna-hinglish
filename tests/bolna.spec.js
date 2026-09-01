@@ -11,7 +11,7 @@ const core = {
 };
 
 async function installGeminiMock(page) {
-  const pcm = Buffer.alloc(24000 / 4 * 2).toString('base64');
+  const pcm = Buffer.alloc(12000).toString('base64');
   await page.route('https://generativelanguage.googleapis.com/**', async route => {
     const body = JSON.parse(route.request().postData() || '{}');
     if (body.model === 'gemini-3.1-flash-tts-preview') {
@@ -32,58 +32,69 @@ async function boot(page) {
   await expect(page.locator('.brand')).toHaveText('bolna');
 }
 
-test('single consolidated runtime owns request, speech and playback', async ({ page }) => {
+test('only the clean runtime is loaded', async ({ page }) => {
   await boot(page);
   const ownership = await page.evaluate(() => ({
     runtime: window.__bolnaRuntime,
-    listening: startListening.toString(),
-    playing: playText.toString(),
+    endpoint: GEMINI_ENDPOINT,
     scripts: [...document.scripts].map(s=>s.getAttribute('src')).filter(Boolean),
   }));
-  expect(ownership.runtime).toBe('consolidated-v1');
-  expect(ownership.scripts).toEqual(['./app.js','./runtime-final.js']);
-  expect(ownership.listening).toContain('transcribe');
-  expect(ownership.listening).toContain('gen(transcript)');
-  expect(ownership.playing).toContain('playBlob');
+  expect(ownership.runtime).toBe('clean-v2');
+  expect(ownership.endpoint).toBe('https://generativelanguage.googleapis.com/v1/interactions');
+  expect(ownership.scripts).toEqual(['./app-clean.js']);
 });
 
-test('transcription + generation complete quickly and return expected core result', async ({ page }) => {
+test('transcription plus generation complete without state freeze', async ({ page }) => {
   await boot(page);
   const elapsed = await page.evaluate(async () => {
+    const wav = new Blob([new Uint8Array(256)], {type:'audio/wav'});
     const t0 = performance.now();
-    const text = await transcribe('AAAA', 'audio/webm');
-    const out = await gen(text);
-    return { ms: performance.now() - t0, text, out };
+    const text = await transcribe(wav);
+    const out = await generateCore(text);
+    return {ms:performance.now()-t0,text,out};
   });
   expect(elapsed.text).toBe('Please stop right here.');
   expect(elapsed.out.natural).toBe(core.natural);
   expect(elapsed.ms).toBeLessThan(1500);
 });
 
-test('Gemini PCM is wrapped as a valid WAV before playback', async ({ page }) => {
+test('provider failures are distinguished from quota failures', async ({ page }) => {
+  await boot(page);
+  const messages = await page.evaluate(() => ({
+    quota: classifyError(429,{error:{message:'quota'}}).message,
+    provider: classifyError(500,{error:{message:'server'}}).message,
+    auth: classifyError(403,{error:{message:'denied'}}).message,
+  }));
+  expect(messages.quota).toContain('quota');
+  expect(messages.provider).toContain('temporarily unavailable');
+  expect(messages.auth).toContain('API key');
+});
+
+test('Gemini PCM is wrapped as valid WAV', async ({ page }) => {
   await boot(page);
   const sig = await page.evaluate(async () => {
     const blob = await speech('Bhaiya, bas yahin rok dena.', false);
     const bytes = new Uint8Array(await blob.arrayBuffer());
-    return String.fromCharCode(...bytes.slice(0, 12));
+    return String.fromCharCode(...bytes.slice(0,12));
   });
-  expect(sig.slice(0, 4)).toBe('RIFF');
-  expect(sig.slice(8, 12)).toBe('WAVE');
+  expect(sig.slice(0,4)).toBe('RIFF');
+  expect(sig.slice(8,12)).toBe('WAVE');
 });
 
-test('three consecutive audio plays do not throw or freeze', async ({ page }) => {
+test('three consecutive audio plays do not throw or close audio context', async ({ page }) => {
   await boot(page);
-  const failures = await page.evaluate(async () => {
-    const out=[];
+  const result = await page.evaluate(async () => {
+    const failures=[];
     for(let i=0;i<3;i++){
-      try{await playText('Bhaiya, bas yahin rok dena.', false)}catch(e){out.push(String(e?.message||e))}
+      try{await playText('Bhaiya, bas yahin rok dena.', false)}catch(e){failures.push(String(e?.message||e))}
     }
-    return out;
+    return {failures, state: playbackCtx?.state || 'none'};
   });
-  expect(failures).toEqual([]);
+  expect(result.failures).toEqual([]);
+  expect(result.state).not.toBe('closed');
 });
 
-test('typed phrase reaches ready UI without freezing', async ({ page }) => {
+test('typed phrase reaches ready UI', async ({ page }) => {
   await boot(page);
   await page.getByRole('button', { name: 'Type instead' }).click();
   await page.locator('#typed').fill('Please stop right here.');

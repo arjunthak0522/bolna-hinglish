@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
+      - run: npm install
       - run: npx playwright install --with-deps chromium webkit
       - run: node --check app-runtime.js
       - run: npx playwright test tests/persistent-cache.spec.js --project=chromium-393 --project=webkit-393

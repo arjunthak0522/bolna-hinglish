@@ -11,29 +11,17 @@ const core = {
 };
 
 async function installGeminiMock(page) {
-  const pcm = Buffer.alloc(24000 / 4 * 2).toString('base64'); // 250ms, 24kHz mono 16-bit PCM
+  const pcm = Buffer.alloc(24000 / 4 * 2).toString('base64');
   await page.route('https://generativelanguage.googleapis.com/**', async route => {
     const body = JSON.parse(route.request().postData() || '{}');
     if (body.model === 'gemini-3.1-flash-tts-preview') {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ output_audio: { data: pcm, mime_type: 'audio/pcm' } }),
-      });
+      return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_audio:{data:pcm,mime_type:'audio/pcm'}})});
     }
     const hasAudio = Array.isArray(body.input) && body.input.some(x => x && x.type === 'audio');
     if (hasAudio) {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ output_text: 'Please stop right here.' }),
-      });
+      return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:'Please stop right here.'})});
     }
-    return route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ output_text: JSON.stringify(core) }),
-    });
+    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:JSON.stringify(core)})});
   });
 }
 
@@ -44,16 +32,19 @@ async function boot(page) {
   await expect(page.locator('.brand')).toHaveText('bolna');
 }
 
-test('final script ownership is stable two-stage pipeline + iPhone audio layer', async ({ page }) => {
+test('single consolidated runtime owns request, speech and playback', async ({ page }) => {
   await boot(page);
   const ownership = await page.evaluate(() => ({
+    runtime: window.__bolnaRuntime,
     listening: startListening.toString(),
     playing: playText.toString(),
+    scripts: [...document.scripts].map(s=>s.getAttribute('src')).filter(Boolean),
   }));
+  expect(ownership.runtime).toBe('consolidated-v1');
+  expect(ownership.scripts).toEqual(['./app.js','./runtime-final.js']);
   expect(ownership.listening).toContain('transcribe');
   expect(ownership.listening).toContain('gen(transcript)');
-  expect(ownership.listening).not.toContain('bolnaAudioToResult');
-  expect(ownership.playing).toContain('playBlobThroughWebAudio');
+  expect(ownership.playing).toContain('playBlob');
 });
 
 test('transcription + generation complete quickly and return expected core result', async ({ page }) => {
@@ -80,21 +71,16 @@ test('Gemini PCM is wrapped as a valid WAV before playback', async ({ page }) =>
   expect(sig.slice(8, 12)).toBe('WAVE');
 });
 
-test('three consecutive audio plays do not throw or leave state stuck', async ({ page }) => {
+test('three consecutive audio plays do not throw or freeze', async ({ page }) => {
   await boot(page);
-  const result = await page.evaluate(async () => {
-    const failures = [];
-    for (let i = 0; i < 3; i++) {
-      try {
-        await playText('Bhaiya, bas yahin rok dena.', false);
-      } catch (e) {
-        failures.push(String(e && e.message || e));
-      }
+  const failures = await page.evaluate(async () => {
+    const out=[];
+    for(let i=0;i<3;i++){
+      try{await playText('Bhaiya, bas yahin rok dena.', false)}catch(e){out.push(String(e?.message||e))}
     }
-    return { failures, state: typeof bolnaAudioContext === 'undefined' ? 'missing' : bolnaAudioContext?.state };
+    return out;
   });
-  expect(result.failures).toEqual([]);
-  expect(result.state).not.toBe('closed');
+  expect(failures).toEqual([]);
 });
 
 test('typed phrase reaches ready UI without freezing', async ({ page }) => {

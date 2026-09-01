@@ -22,6 +22,10 @@ async function installGeminiMock(page) {
       if (body.model !== 'gemini-3.7-flash') {
         return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({error:{message:"The value 'audio' is not supported for 'type'"}})});
       }
+      const thinking = body.generation_config?.thinking_level;
+      if (!['low','medium','high'].includes(thinking)) {
+        return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({error:{message:"'minimal' is not a supported thinking level for this model. Allowed values are: high, low, medium."}})});
+      }
       return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:'Please stop right here.'})});
     }
     return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:JSON.stringify(core)})});
@@ -35,7 +39,7 @@ async function boot(page) {
   await expect(page.locator('.brand')).toHaveText('bolna');
 }
 
-test('clean runtime plus guarded Gemini contract are loaded', async ({ page }) => {
+test('clean runtime plus full guarded Gemini audio contract are loaded', async ({ page }) => {
   await boot(page);
   const ownership = await page.evaluate(() => ({
     runtime: window.__bolnaRuntime,
@@ -44,17 +48,17 @@ test('clean runtime plus guarded Gemini contract are loaded', async ({ page }) =
     scripts: [...document.scripts].map(s=>s.getAttribute('src')).filter(Boolean),
   }));
   expect(ownership.runtime).toBe('clean-v2');
-  expect(ownership.apiFix).toBe('v1beta-audio-model-guard');
+  expect(ownership.apiFix).toBe('v1beta-audio-model-thinking-guard');
   expect(ownership.endpoint).toBe('https://generativelanguage.googleapis.com/v1/interactions');
   expect(ownership.scripts).toEqual(['./api-contract-fix.js','./app-clean.js']);
 });
 
-test('inline audio is sent to v1beta with gemini-3.7-flash', async ({ page }) => {
+test('inline audio uses v1beta + gemini-3.7-flash + low thinking', async ({ page }) => {
   const seen=[];
   await page.addInitScript(() => localStorage.setItem('bolna_gemini_key', 'qa-test-key'));
   await page.route('https://generativelanguage.googleapis.com/**', async route => {
     const body = JSON.parse(route.request().postData() || '{}');
-    seen.push({url:route.request().url(),model:body.model,input:body.input});
+    seen.push({url:route.request().url(),model:body.model,input:body.input,thinking:body.generation_config?.thinking_level});
     const hasAudio = Array.isArray(body.input) && body.input.some(x => x && x.type === 'audio');
     return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:hasAudio?'Please stop right here.':JSON.stringify(core)})});
   });
@@ -68,6 +72,7 @@ test('inline audio is sent to v1beta with gemini-3.7-flash', async ({ page }) =>
   expect(audioReq.url).toContain('/v1beta/interactions');
   expect(audioReq.url).not.toContain('/v1/interactions');
   expect(audioReq.model).toBe('gemini-3.7-flash');
+  expect(audioReq.thinking).toBe('low');
 });
 
 test('transcription plus generation complete without state freeze', async ({ page }) => {

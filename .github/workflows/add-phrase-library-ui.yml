@@ -1,0 +1,32 @@
+name: Add Phrase Library UI
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".phrase-library-ui-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: python .github/scripts/add_phrase_library_ui.py
+      - run: node --check app-runtime.js
+      - run: node --check phrase-library.js
+      - run: |
+          grep -q "Phrase Library" app-runtime.js
+          grep -q "data-view=\"library\"" app-runtime.js
+          grep -q "repeat(4,1fr)" style.css
+          ! git diff -- api/gemini.js | grep .
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js style.css
+          git commit -m "Add phrase library UI"
+          git push origin HEAD:rescue-single-runtime

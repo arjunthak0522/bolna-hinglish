@@ -16,6 +16,7 @@ jobs:
       VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
       VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
       VERCEL_CLI_VERSION: 59.10.0
+      STABLE_PREVIEW_ALIAS: hinglish-companion-preview-arjunthak-4571.vercel.app
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,3 +99,13 @@ jobs:
             *hinglish-companion.vercel.app) echo "Refusing production alias"; exit 3 ;;
             *) echo "Preview-only deployment verified: $PREVIEW_URL" ;;
           esac
+          test "$STABLE_PREVIEW_ALIAS" != "hinglish-companion.vercel.app"
+
+      - name: Point stable preview alias at verified deployment
+        if: steps.auth.outputs.available == 'true'
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npx vercel alias set "$PREVIEW_URL" "$STABLE_PREVIEW_ALIAS" --token="$VERCEL_TOKEN"
+          echo "Stable preview alias: https://$STABLE_PREVIEW_ALIAS"

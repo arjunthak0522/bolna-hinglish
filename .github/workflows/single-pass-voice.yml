@@ -1,0 +1,24 @@
+name: Single Pass Voice
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".single-pass-voice-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - run: python .github/scripts/single_pass_voice.py
+      - run: node --check app-runtime.js
+      - run: node --check api/gemini.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js api/gemini.js
+          git commit -m "Make voice result single-pass and audio independent"
+          git push origin HEAD:rescue-single-runtime

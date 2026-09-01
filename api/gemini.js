@@ -94,7 +94,8 @@ function validateOperation(body) {
 function providerRequest(body) {
   if (body.operation === 'transcribe') {
     return {
-      timeoutMs: 15000,
+      timeoutMs: 8000,
+      retryTimeoutMs: 8000,
       request: {
         model: MODELS.transcribe,
         input: [
@@ -108,6 +109,7 @@ function providerRequest(body) {
   if (body.operation === 'generate' || body.operation === 'enrich') {
     return {
       timeoutMs: 15000,
+      retryTimeoutMs: 0,
       request: {
         model: MODELS[body.operation],
         input: body.prompt,
@@ -118,6 +120,7 @@ function providerRequest(body) {
   }
   return {
     timeoutMs: 18000,
+    retryTimeoutMs: 0,
     request: {
       model: MODELS.tts,
       input: `Synthesize speech only. Voice character: adult Indian male, warm, natural, calm, contemporary. Accent: natural urban Indian speech. ${body.slow ? 'Speak slowly and clearly for a learner.' : 'Speak at a natural conversational pace.'} Handle Hindi-English code switching naturally. Spoken transcript begins now: ${body.text}`,
@@ -141,7 +144,7 @@ module.exports = async function handler(req, res) {
   const validationError = validateOperation(req.body);
   if (validationError) return send(res, 400, { ok: false, category: 'invalid_client_request', message: validationError });
 
-  const { request, timeoutMs } = providerRequest(req.body);
+  const { request, timeoutMs, retryTimeoutMs } = providerRequest(req.body);
   const diagnostics = {
     operation: req.body.operation,
     endpoint: GEMINI_ENDPOINT,
@@ -150,20 +153,36 @@ module.exports = async function handler(req, res) {
     recordingBytesApprox: req.body.operation === 'transcribe' ? Math.floor(req.body.audioData.length * 0.75) : undefined,
   };
 
-  try {
-    const { response, data, elapsedMs } = await callGemini(apiKey, request, timeoutMs);
-    diagnostics.status = response.status;
-    diagnostics.elapsedMs = elapsedMs;
-    if (!response.ok) {
-      const category = classifyProviderStatus(response.status);
+  let attempt = 1;
+  let totalElapsedMs = 0;
+  while (true) {
+    try {
+      const currentTimeout = attempt === 1 ? timeoutMs : retryTimeoutMs;
+      const { response, data, elapsedMs } = await callGemini(apiKey, request, currentTimeout);
+      totalElapsedMs += elapsedMs;
+      diagnostics.status = response.status;
+      diagnostics.elapsedMs = totalElapsedMs;
+      diagnostics.attempt = attempt;
+      if (!response.ok) {
+        const category = classifyProviderStatus(response.status);
+        console.error('bolna.provider', { ...diagnostics, category });
+        return send(res, response.status, { ok: false, category, diagnostics });
+      }
+      console.info('bolna.provider', { ...diagnostics, category: 'ok' });
+      return send(res, 200, { ok: true, data, diagnostics });
+    } catch (error) {
+      const timedOut = error?.name === 'AbortError';
+      totalElapsedMs += attempt === 1 ? timeoutMs : retryTimeoutMs;
+      if (timedOut && attempt === 1 && retryTimeoutMs > 0) {
+        console.warn('bolna.provider.retry', { ...diagnostics, attempt, category: 'timeout', elapsedMs: totalElapsedMs });
+        attempt = 2;
+        continue;
+      }
+      diagnostics.elapsedMs = totalElapsedMs;
+      diagnostics.attempt = attempt;
+      const category = timedOut ? 'timeout' : 'network_or_provider_transport';
       console.error('bolna.provider', { ...diagnostics, category });
-      return send(res, response.status, { ok: false, category, diagnostics });
+      return send(res, category === 'timeout' ? 504 : 502, { ok: false, category, diagnostics });
     }
-    console.info('bolna.provider', { ...diagnostics, category: 'ok' });
-    return send(res, 200, { ok: true, data, diagnostics });
-  } catch (error) {
-    const category = error?.name === 'AbortError' ? 'timeout' : 'network_or_provider_transport';
-    console.error('bolna.provider', { ...diagnostics, category });
-    return send(res, category === 'timeout' ? 504 : 502, { ok: false, category, diagnostics });
   }
 };

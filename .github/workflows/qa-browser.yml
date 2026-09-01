@@ -2,9 +2,6 @@ name: Bolna Browser QA
 
 on:
   workflow_dispatch:
-  push:
-    branches: ["rescue-single-runtime"]
-    paths: [".qa-trigger"]
 
 permissions:
   contents: read

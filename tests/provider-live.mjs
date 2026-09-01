@@ -4,33 +4,54 @@ const key = process.env.GEMINI_API_KEY;
 if (!key) throw new Error('GEMINI_API_KEY is required for real provider validation.');
 
 const endpoint = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function call(body, label, timeoutMs = 30000) {
-  const started = Date.now();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    const raw = await response.text();
-    let data;
-    try { data = JSON.parse(raw); } catch { data = null; }
-    console.log(`${label}: status=${response.status} elapsedMs=${Date.now() - started}`);
-    if (!response.ok) {
-      const providerMessage = data?.error?.message || raw.slice(0, 500);
-      throw new Error(`${label} rejected by Gemini: HTTP ${response.status}: ${providerMessage}`);
-    }
-    return data;
-  } catch (error) {
-    if (error?.name === 'AbortError') throw new Error(`${label} timed out after ${timeoutMs}ms`);
-    throw error;
-  } finally {
-    clearTimeout(timer);
+function retryDelayMs(response, providerMessage) {
+  const retryAfter = response.headers.get('retry-after');
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds * 1000);
   }
+  const match = providerMessage.match(/retry in\s+([0-9.]+)s/i);
+  if (match) return Math.ceil(Number(match[1]) * 1000);
+  return 2000;
+}
+
+async function call(body, label, timeoutMs = 30000, maxQuotaRetries = 1) {
+  for (let attempt = 0; attempt <= maxQuotaRetries; attempt += 1) {
+    const started = Date.now();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      const raw = await response.text();
+      let data;
+      try { data = JSON.parse(raw); } catch { data = null; }
+      console.log(`${label}: status=${response.status} elapsedMs=${Date.now() - started} attempt=${attempt + 1}`);
+      if (!response.ok) {
+        const providerMessage = data?.error?.message || raw.slice(0, 500);
+        if (response.status === 429 && attempt < maxQuotaRetries) {
+          const waitMs = Math.min(Math.max(retryDelayMs(response, providerMessage), 1000), 30000);
+          console.log(`${label}: quota cooldown ${waitMs}ms before one controlled retry`);
+          await sleep(waitMs);
+          continue;
+        }
+        throw new Error(`${label} rejected by Gemini: HTTP ${response.status}: ${providerMessage}`);
+      }
+      return data;
+    } catch (error) {
+      if (error?.name === 'AbortError') throw new Error(`${label} timed out after ${timeoutMs}ms`);
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw new Error(`${label} exhausted controlled retries.`);
 }
 
 function outputText(data) {
@@ -72,7 +93,7 @@ function pcmToWavBase64(pcmBase64, sampleRate = 24000) {
 
 const tts = await call({
   model: 'gemini-3.1-flash-tts-preview',
-  input: 'Speak clearly in natural adult Indian English: Stop here.',
+  input: 'Synthesize speech only in a natural adult Indian male voice. Spoken transcript begins now: Stop here.',
   response_format: { type: 'audio' },
   generation_config: { speech_config: [{ voice: 'Rasalgethi' }] },
 }, 'tts');

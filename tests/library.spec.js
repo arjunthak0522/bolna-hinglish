@@ -28,7 +28,7 @@ test('library search and category filtering work', async ({ page }) => {
 
 test('opening a library phrase shows phonetics and can save to My Phrases', async ({ page }) => {
   await page.getByRole('button', { name: 'Library' }).click();
-  await page.getByRole('button', { name: /Your haircut looks great/ }).click();
+  await page.locator('[data-library-open="70"]').click();
   await expect(page.getByRole('heading', { name: 'Bhai, haircut mast hai!' })).toBeVisible();
   await expect(page.getByText('bhai, HAIR-cut must hai')).toBeVisible();
   await page.getByRole('button', { name: /Save/ }).click();
@@ -40,5 +40,6 @@ test('existing Speak flow remains available after visiting library', async ({ pa
   await page.getByRole('button', { name: 'Library' }).click();
   await page.getByRole('button', { name: 'Speak' }).click();
   await expect(page.getByRole('heading', { name: 'What do you want to say?' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Tap to speak/i })).toBeVisible();
+  await expect(page.locator('#mic')).toBeVisible();
+  await expect(page.locator('.micLabel')).toHaveText('Tap to speak');
 });

@@ -123,7 +123,7 @@ test('details keep pronunciation, meaning, polite, casual, More Hindi and breakd
   await page.getByRole('button', { name: 'More Hindi' }).click();
   await expect(page.getByText(enrich.moreHindi)).toBeVisible();
   await page.getByRole('button', { name: 'Break it down' }).click();
-  await expect(page.getByText('BHAI-yaa', { exact: false })).toBeVisible();
+  await expect(page.locator('.wordRow small')).toContainText('BHAI-yaa');
 });
 
 for (const [name, failure, title] of [

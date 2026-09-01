@@ -1,4 +1,4 @@
-const BOLNA_API='https://hinglish-companion.vercel.app/api/gemini';
+const BOLNA_API=location.hostname.endsWith('.vercel.app')?'/api/gemini':'https://hinglish-companion.vercel.app/api/gemini';
 const contexts=['General','Driver','Household','Friend','Older person','Shopkeeper','Restaurant','Security','Delivery','Doctor','Professional'];
 const situations={
   'Getting around':{context:'Driver',items:['Please stop here.','Can you go a little further?','Take the next left.','Please follow Google Maps.','Can you wait here for five minutes?']},

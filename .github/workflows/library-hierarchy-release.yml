@@ -1,0 +1,50 @@
+name: Library Hierarchy Production Release
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".library-hierarchy-release-trigger"]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      RELEASE_SHA: ed207c294fcae9d9c4643e9146b62137bb9f1b78
+      PROD_ORIGIN: https://hinglish-companion.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify exact release source
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          node --check app-runtime.js
+          node --check api/gemini.js
+          grep -q '<strong>${esc(x.english)}</strong><em>${esc(x.phonetic)}</em><span>${esc(x.natural)}</span>' app-runtime.js
+          grep -q '.phraseLibraryMain em{font-size:16px;line-height:1.4' style.css
+      - name: Deploy verified source to production once
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          PROD_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
+      - name: Verify production fingerprint and hierarchy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          HEALTH=$(npx vercel curl /api/health --deployment "$PROD_URL")
+          node -e 'const h=JSON.parse(process.argv[1]); if(!h.ok||h.environment!=="production"||h.commit!==process.env.RELEASE_SHA) throw new Error("production fingerprint mismatch");' "$HEALTH"
+          JS=$(npx vercel curl /app-runtime.js --deployment "$PROD_ORIGIN")
+          echo "$JS" | grep -q '<strong>${esc(x.english)}</strong><em>${esc(x.phonetic)}</em><span>${esc(x.natural)}</span>'
+          CSS=$(npx vercel curl /style.css --deployment "$PROD_ORIGIN")
+          echo "$CSS" | grep -q '.phraseLibraryMain em{font-size:16px;line-height:1.4'

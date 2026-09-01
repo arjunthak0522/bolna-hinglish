@@ -1,0 +1,40 @@
+name: Move Say Again
+
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".move-say-again-trigger"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Move Say something else above variants
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="""</section><div class=\"variantActions\"><button data-panel=\"words\">Break it down</button><button data-panel=\"polite\">More polite</button><button data-panel=\"casual\">More casual</button><button data-panel=\"moreHindi\">More Hindi</button></div>${result._loading?'<div class=\"detailPanel\">Loading details…</div>':panel==='words'?`<div class=\"detailPanel\"><p class=\"kicker\">Break it down</p>${(result.words||[]).map((w,i)=>`<button class=\"wordRow\" data-word=\"${i}\"><span><strong>${esc(w.word)}</strong><small>${esc(w.phonetic)} · ${esc(w.meaning)}</small>${w.note?`<em>${esc(w.note)}</em>`:''}</span><b>▶</b></button>`).join('')}</div>`:v?`<div class=\"detailPanel\"><p class=\"variantText\">${esc(v)}</p><button class=\"miniPlay\" id=\"variantPlay\">▶ Hear this version</button></div>`:''}<button class=\"speakAgain\" id=\"again\">● Say something else</button>"""
+          new="""</section><button class=\"speakAgain\" id=\"again\">● Say something else</button><div class=\"variantActions\"><button data-panel=\"words\">Break it down</button><button data-panel=\"polite\">More polite</button><button data-panel=\"casual\">More casual</button><button data-panel=\"moreHindi\">More Hindi</button></div>${result._loading?'<div class=\"detailPanel\">Loading details…</div>':panel==='words'?`<div class=\"detailPanel\"><p class=\"kicker\">Break it down</p>${(result.words||[]).map((w,i)=>`<button class=\"wordRow\" data-word=\"${i}\"><span><strong>${esc(w.word)}</strong><small>${esc(w.phonetic)} · ${esc(w.meaning)}</small>${w.note?`<em>${esc(w.note)}</em>`:''}</span><b>▶</b></button>`).join('')}</div>`:v?`<div class=\"detailPanel\"><p class=\"variantText\">${esc(v)}</p><button class=\"miniPlay\" id=\"variantPlay\">▶ Hear this version</button></div>`:''}"""
+          if old not in s:
+              raise SystemExit('Expected result layout not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+          node --check app-runtime.js
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Move Say something else higher in result layout"
+          git push origin HEAD:rescue-single-runtime

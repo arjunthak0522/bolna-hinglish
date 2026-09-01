@@ -1,0 +1,37 @@
+name: TTS Quota Message Patch
+
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".tts-quota-message-trigger"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - name: Add explicit TTS quota fallback message
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="""async function playText(text,slow=false){if(!text)return;unlockPlayback();try{if(result){state='playing';error=null;render()}const b=await speech(text,slow);await playBlob(b);if(result){state='ready';render()}}catch(e){error={title:e.userTitle||'Audio temporarily unavailable',detail:e.message||'Use the pronunciation guide below for now.'};if(result){state='ready';render()}}}"""
+          new="""async function playText(text,slow=false){if(!text)return;unlockPlayback();try{if(result){state='playing';error=null;render()}const b=await speech(text,slow);await playBlob(b);if(result){state='ready';render()}}catch(e){if(e?.category==='quota_exhausted'){error={title:'Audio limit reached for now',detail:'Gemini TTS has reached its current quota. Use “Say it like this” for pronunciation. Audio will return when the quota resets.'}}else{error={title:e.userTitle||'Audio temporarily unavailable',detail:e.message||'Use the pronunciation guide below for now.'}}if(result){state='ready';render()}}}"""
+          if old not in s:
+              raise SystemExit('Expected playText function not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+          node --check app-runtime.js
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Clarify TTS quota fallback"
+          git push origin HEAD:rescue-single-runtime

@@ -1,0 +1,23 @@
+name: Production Origin QA
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".production-origin-qa-trigger"]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node --check api/gemini.js
+      - run: node --check app-runtime.js
+      - run: node tests/production-origin.test.js
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e

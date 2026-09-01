@@ -55,6 +55,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           npm install --no-save vercel@latest
+          rm -rf .vercel
           npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
           PREVIEW_URL=$(npx vercel deploy --yes --token="$VERCEL_TOKEN")
           echo "url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"

@@ -1,0 +1,40 @@
+name: Patch Bolna Preview Routing
+
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".preview-route-trigger"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Patch preview API routing
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="const BOLNA_API='https://hinglish-companion.vercel.app/api/gemini';"
+          new="const BOLNA_API=location.hostname.endsWith('.vercel.app')?'/api/gemini':'https://hinglish-companion.vercel.app/api/gemini';"
+          if old not in s:
+              raise SystemExit('Expected Bolna API line not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+          node --check app-runtime.js
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Use same-origin API on Vercel previews"
+          git push origin HEAD:rescue-single-runtime

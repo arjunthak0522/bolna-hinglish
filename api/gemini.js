@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const MODELS = Object.freeze({
-  transcribe: 'gemini-3.7-flash',
+  transcribe: 'gemini-3.5-flash-lite',
   generate: 'gemini-3.5-flash-lite',
   enrich: 'gemini-3.5-flash-lite',
   tts: 'gemini-3.1-flash-tts-preview',
@@ -78,7 +78,7 @@ function providerRequest(body) {
           { type: 'text', text: 'Transcribe this short English utterance exactly. Return only the transcript with normal punctuation. Do not translate or explain.' },
           { type: 'audio', data: body.audioData, mime_type: 'audio/wav' },
         ],
-        generation_config: { thinking_level: 'low' },
+        generation_config: { thinking_level: 'minimal' },
       },
     };
   }

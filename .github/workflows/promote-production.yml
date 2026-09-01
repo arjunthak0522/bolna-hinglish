@@ -1,0 +1,50 @@
+name: Promote Accepted Bolna Production
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".production-trigger"]
+permissions:
+  contents: read
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      ACCEPTED_DEPLOYMENT: https://hinglish-companion-d1xgaeot2-arjunthak-4571.vercel.app
+      EXPECTED_SHA: 5100f32115b31e74fafe17984f91d48ab402534d
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify accepted source SHA
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          node --check app-runtime.js
+          node --check api/gemini.js
+          node --check api/health.js
+      - name: Promote exact accepted preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          npx vercel promote "$ACCEPTED_DEPLOYMENT" --yes --token="$VERCEL_TOKEN"
+      - name: Verify production health
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          HEALTH=$(npx vercel curl /api/health --deployment https://hinglish-companion.vercel.app --token="$VERCEL_TOKEN")
+          echo "$HEALTH"
+          node -e '
+            const h=JSON.parse(process.argv[1]);
+            if(!h.ok) throw new Error("production health not ok");
+            if(h.service!=="bolna-gemini-gateway") throw new Error("wrong service");
+            if(h.runtime!=="single-v1") throw new Error("wrong runtime");
+            if(h.commit!==process.env.EXPECTED_SHA) throw new Error(`wrong commit ${h.commit}`);
+          ' "$HEALTH"

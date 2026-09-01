@@ -1,8 +1,6 @@
 name: Bolna Real Gemini Contract
 
 on:
-  push:
-    branches: ["rescue-single-runtime"]
   workflow_dispatch:
 
 permissions:

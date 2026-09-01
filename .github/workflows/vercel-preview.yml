@@ -2,6 +2,9 @@ name: Bolna Exact Vercel Preview
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".preview-trigger"]
 
 permissions:
   contents: read
@@ -31,17 +34,21 @@ jobs:
           node --check api/gemini.js
           node --check api/health.js
 
-      - name: Require Vercel token
+      - name: Detect Vercel token
+        id: auth
         shell: bash
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "VERCEL_TOKEN repository secret is required for the controlled preview deployment."
-            exit 2
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Controlled preview skipped: VERCEL_TOKEN is not configured."
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Deploy exact rescue source to preview only
+        if: steps.auth.outputs.available == 'true'
         id: deploy
         shell: bash
         env:
@@ -54,6 +61,7 @@ jobs:
           echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
 
       - name: Verify preview fingerprint
+        if: steps.auth.outputs.available == 'true'
         shell: bash
         run: |
           HEALTH=$(curl --fail --silent --show-error "$PREVIEW_URL/api/health")
@@ -70,6 +78,7 @@ jobs:
           ' "$HEALTH"
 
       - name: Confirm production not targeted
+        if: steps.auth.outputs.available == 'true'
         shell: bash
         run: |
           case "$PREVIEW_URL" in

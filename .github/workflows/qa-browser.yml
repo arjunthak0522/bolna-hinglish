@@ -1,8 +1,7 @@
 name: Bolna Browser QA
 
 on:
-  push:
-    branches: ["qa-browser-tests", "release-candidate-clean", "rescue-single-runtime", "main"]
+  workflow_dispatch:
 
 permissions:
   contents: read

@@ -69,11 +69,16 @@ async function callGemini(apiKey, body, timeoutMs) {
 
 function validateOperation(body) {
   if (!body || typeof body !== 'object') return 'Request body must be JSON.';
-  if (!['transcribe', 'generate', 'enrich', 'tts'].includes(body.operation)) return 'Unsupported operation.';
+  if (!['voice_core', 'transcribe', 'generate', 'enrich', 'tts'].includes(body.operation)) return 'Unsupported operation.';
 
-  if (body.operation === 'transcribe') {
+  if (body.operation === 'voice_core' || body.operation === 'transcribe') {
     if (typeof body.audioData !== 'string' || !body.audioData) return 'audioData is required.';
-    if (body.audioMime !== 'audio/wav') return 'Bolna transcription requires normalized audio/wav.';
+    if (body.audioMime !== 'audio/wav') return 'Bolna voice input requires normalized audio/wav.';
+    if (body.operation === 'voice_core') {
+      if (typeof body.prompt !== 'string' || !body.prompt.trim()) return 'prompt is required.';
+      if (body.prompt.length > LIMITS.promptChars) return 'Prompt is too large.';
+      if (!body.schema || JSON.stringify(body.schema).length > LIMITS.schemaChars) return 'Valid schema is required.';
+    }
     if (body.audioData.length > LIMITS.audioBase64Chars) return 'Recording is too large.';
   }
 
@@ -92,6 +97,21 @@ function validateOperation(body) {
 }
 
 function providerRequest(body) {
+  if (body.operation === 'voice_core') {
+    return {
+      timeoutMs: 6500,
+      retryTimeoutMs: 7000,
+      request: {
+        model: MODELS.generate,
+        input: [
+          { type: 'text', text: body.prompt },
+          { type: 'audio', data: body.audioData, mime_type: 'audio/wav' },
+        ],
+        generation_config: { thinking_level: 'minimal' },
+        response_format: { type: 'text', mime_type: 'application/json', schema: body.schema },
+      },
+    };
+  }
   if (body.operation === 'transcribe') {
     return {
       timeoutMs: 5500,
@@ -149,8 +169,8 @@ module.exports = async function handler(req, res) {
     operation: req.body.operation,
     endpoint: GEMINI_ENDPOINT,
     model: request.model,
-    mimeType: req.body.operation === 'transcribe' ? 'audio/wav' : undefined,
-    recordingBytesApprox: req.body.operation === 'transcribe' ? Math.floor(req.body.audioData.length * 0.75) : undefined,
+    mimeType: ['voice_core','transcribe'].includes(req.body.operation) ? 'audio/wav' : undefined,
+    recordingBytesApprox: ['voice_core','transcribe'].includes(req.body.operation) ? Math.floor(req.body.audioData.length * 0.75) : undefined,
   };
 
   let attempt = 1;

@@ -16,5 +16,11 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Static syntax checks
+        run: |
+          node --check app-runtime.js
+          node --check api/gemini.js
+          node --check tests/bolna.spec.js
+          node --check playwright.config.js
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e

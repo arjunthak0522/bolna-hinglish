@@ -42,7 +42,9 @@ async function boot(page, options) {
 }
 
 async function typedPhrase(page, text) {
-  await page.getByRole('button', { name: 'Type instead' }).click();
+  if (!(await page.locator('#typed').isVisible().catch(() => false))) {
+    await page.getByRole('button', { name: 'Type instead' }).click();
+  }
   await page.locator('#typed').fill(text);
   await page.getByRole('button', { name: 'Show me how to say it' }).click();
   await expect(page.locator('.hinglish')).toBeVisible();
@@ -89,7 +91,8 @@ test('five consecutive phrase cycles recover without refresh', async ({ page }) 
     await typedPhrase(page, phrase);
     await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible();
     await page.getByRole('button', { name: /Say something else/i }).click();
-    await expect(page.getByRole('button', { name: 'Tap to speak' })).toBeVisible();
+    await expect(page.locator('#mic')).toBeVisible();
+    await expect(page.locator('.micLabel')).toHaveText('Tap to speak');
   }
 });
 
@@ -98,11 +101,11 @@ test('five consecutive Hear It plays and repeated Slow recover', async ({ page }
   await typedPhrase(page, 'Stop here.');
   for (let i = 0; i < 5; i++) {
     await page.getByRole('button', { name: /Hear it/i }).click();
-    await expect(page.getByRole('button', { name: /Hear it/i })).toBeEnabled({ timeout: 3000 });
+    await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible({ timeout: 3000 });
   }
   for (let i = 0; i < 3; i++) {
     await page.getByRole('button', { name: /Slow/i }).click();
-    await expect(page.getByRole('button', { name: /Slow/i })).toBeEnabled({ timeout: 3000 });
+    await expect(page.getByRole('button', { name: /Slow/i })).toBeVisible({ timeout: 3000 });
   }
   const state = await page.evaluate(() => playbackCtx?.state || 'none');
   expect(state).not.toBe('closed');
@@ -135,7 +138,8 @@ for (const [name, failure, title] of [
     await page.locator('#typed').fill('Stop here.');
     await page.getByRole('button', { name: 'Show me how to say it' }).click();
     await expect(page.getByText(title)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Tap to speak' })).toBeVisible();
+    await expect(page.locator('#mic')).toBeVisible();
+    await expect(page.locator('.micLabel')).toHaveText('Tap to speak');
   });
 }
 

@@ -1,0 +1,28 @@
+name: Fix iOS Mic Readiness
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".fix-ios-mic-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - run: python .github/scripts/fix_ios_mic_readiness.py
+      - run: node --check app-runtime.js
+      - name: Verify targeted mic guards
+        run: |
+          grep -q "t.enabled&&!t.muted" app-runtime.js
+          grep -q "track.addEventListener('unmute'" app-runtime.js
+          grep -q "phase:'empty_recording'" app-runtime.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Harden iPhone microphone readiness"
+          git push origin HEAD:rescue-single-runtime

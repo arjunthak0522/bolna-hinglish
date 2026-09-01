@@ -2,7 +2,7 @@ name: Bolna Browser QA
 
 on:
   push:
-    branches: ["qa-browser-tests", "release-candidate-clean", "main"]
+    branches: ["qa-browser-tests", "release-candidate-clean", "debug-thinking-level", "main"]
 
 permissions:
   contents: read

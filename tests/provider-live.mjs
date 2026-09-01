@@ -5,22 +5,32 @@ if (!key) throw new Error('GEMINI_API_KEY is required for real provider validati
 
 const endpoint = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 
-async function call(body, label) {
+async function call(body, label, timeoutMs = 30000) {
   const started = Date.now();
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify(body),
-  });
-  const raw = await response.text();
-  let data;
-  try { data = JSON.parse(raw); } catch { data = null; }
-  console.log(`${label}: status=${response.status} elapsedMs=${Date.now() - started}`);
-  if (!response.ok) {
-    const providerMessage = data?.error?.message || raw.slice(0, 500);
-    throw new Error(`${label} rejected by Gemini: HTTP ${response.status}: ${providerMessage}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const raw = await response.text();
+    let data;
+    try { data = JSON.parse(raw); } catch { data = null; }
+    console.log(`${label}: status=${response.status} elapsedMs=${Date.now() - started}`);
+    if (!response.ok) {
+      const providerMessage = data?.error?.message || raw.slice(0, 500);
+      throw new Error(`${label} rejected by Gemini: HTTP ${response.status}: ${providerMessage}`);
+    }
+    return data;
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new Error(`${label} timed out after ${timeoutMs}ms`);
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
-  return data;
 }
 
 function outputText(data) {

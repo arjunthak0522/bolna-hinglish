@@ -94,7 +94,7 @@ function validateOperation(body) {
 function providerRequest(body) {
   if (body.operation === 'transcribe') {
     return {
-      timeoutMs: 8000,
+      timeoutMs: 5500,
       retryTimeoutMs: 8000,
       request: {
         model: MODELS.transcribe,

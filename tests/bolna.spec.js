@@ -32,16 +32,37 @@ async function boot(page) {
   await expect(page.locator('.brand')).toHaveText('bolna');
 }
 
-test('only the clean runtime is loaded', async ({ page }) => {
+test('clean runtime plus API contract shim are loaded', async ({ page }) => {
   await boot(page);
   const ownership = await page.evaluate(() => ({
     runtime: window.__bolnaRuntime,
+    apiFix: window.__bolnaApiContractFix,
     endpoint: GEMINI_ENDPOINT,
     scripts: [...document.scripts].map(s=>s.getAttribute('src')).filter(Boolean),
   }));
   expect(ownership.runtime).toBe('clean-v2');
+  expect(ownership.apiFix).toBe('v1beta-inline-audio');
   expect(ownership.endpoint).toBe('https://generativelanguage.googleapis.com/v1/interactions');
-  expect(ownership.scripts).toEqual(['./app-clean.js']);
+  expect(ownership.scripts).toEqual(['./api-contract-fix.js','./app-clean.js']);
+});
+
+test('inline audio is actually sent to v1beta, never v1', async ({ page }) => {
+  const urls=[];
+  await page.addInitScript(() => localStorage.setItem('bolna_gemini_key', 'qa-test-key'));
+  await page.route('https://generativelanguage.googleapis.com/**', async route => {
+    urls.push(route.request().url());
+    const body = JSON.parse(route.request().postData() || '{}');
+    const hasAudio = Array.isArray(body.input) && body.input.some(x => x && x.type === 'audio');
+    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:hasAudio?'Please stop right here.':JSON.stringify(core)})});
+  });
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const wav = new Blob([new Uint8Array(256)], {type:'audio/wav'});
+    await transcribe(wav);
+  });
+  expect(urls.length).toBeGreaterThan(0);
+  expect(urls.every(u=>u.includes('/v1beta/interactions'))).toBeTruthy();
+  expect(urls.some(u=>u.includes('/v1/interactions'))).toBeFalsy();
 });
 
 test('transcription plus generation complete without state freeze', async ({ page }) => {

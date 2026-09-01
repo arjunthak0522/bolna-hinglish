@@ -103,12 +103,12 @@ assert.ok(audio?.data, 'Gemini TTS returned no audio content.');
 const wav = pcmToWavBase64(audio.data, 24000);
 
 const transcription = await call({
-  model: 'gemini-3.7-flash',
+  model: 'gemini-3.5-flash-lite',
   input: [
     { type: 'text', text: 'Transcribe this short English utterance exactly. Return only the transcript with normal punctuation.' },
     { type: 'audio', data: wav, mime_type: 'audio/wav' },
   ],
-  generation_config: { thinking_level: 'low' },
+  generation_config: { thinking_level: 'minimal' },
 }, 'transcription');
 
 const transcript = outputText(transcription);

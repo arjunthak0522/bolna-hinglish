@@ -4,6 +4,10 @@ const ALLOWED_ORIGINS = new Set([
   'http://127.0.0.1:4173',
   'http://localhost:4173',
 ]);
+const BOLNA_PREVIEW_ORIGIN = /^https:\/\/hinglish-companion-[a-z0-9-]+-arjunthak-4571\.vercel\.app$/;
+function isAllowedOrigin(origin) {
+  return ALLOWED_ORIGINS.has(origin) || BOLNA_PREVIEW_ORIGIN.test(origin);
+}
 
 const LIMITS = Object.freeze({
   audioBase64Chars: 1_000_000,
@@ -21,7 +25,7 @@ const MODELS = Object.freeze({
 
 function cors(req, res) {
   const origin = req.headers.origin || '';
-  if (ALLOWED_ORIGINS.has(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+  if (isAllowedOrigin(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -129,7 +133,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, category: 'method_not_allowed' });
 
   const origin = req.headers.origin || '';
-  if (!ALLOWED_ORIGINS.has(origin)) return send(res, 403, { ok: false, category: 'origin_not_allowed' });
+  if (!isAllowedOrigin(origin)) return send(res, 403, { ok: false, category: 'origin_not_allowed' });
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return send(res, 500, { ok: false, category: 'invalid_api_configuration', message: 'Gemini provider is not configured.' });

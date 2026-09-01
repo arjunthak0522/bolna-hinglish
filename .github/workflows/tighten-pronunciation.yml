@@ -1,0 +1,23 @@
+name: Tighten Pronunciation
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".tighten-pronunciation-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - run: python .github/scripts/tighten_pronunciation.py
+      - run: node --check app-runtime.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Tighten American learner pronunciation standard"
+          git push origin HEAD:rescue-single-runtime

@@ -1,0 +1,24 @@
+name: Bolna Real Gemini Contract
+
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provider-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Static provider-test syntax
+        run: node --check tests/provider-live.mjs
+      - name: Real Gemini provider contract
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node tests/provider-live.mjs

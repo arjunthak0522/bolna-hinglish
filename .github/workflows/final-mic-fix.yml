@@ -1,0 +1,31 @@
+name: Apply Final Mic Fix
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".final-mic-fix-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - run: python .github/scripts/final_mic_fix.py
+      - run: node --check app-runtime.js
+      - run: node --check tests/reliability.spec.js
+      - run: node --check tests/microphone.spec.js
+      - name: Verify minimal runtime delta
+        run: |
+          git diff -- app-runtime.js
+          grep -q "setTimeout(r,180)" app-runtime.js
+          grep -q "phase:'empty_recording'" app-runtime.js
+          ! grep -q "waitForMicTrack" app-runtime.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js tests/reliability.spec.js tests/microphone.spec.js
+          git commit -m "Apply minimal Safari mic readiness fix"
+          git push origin HEAD:rescue-single-runtime

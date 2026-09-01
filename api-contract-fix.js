@@ -1,5 +1,6 @@
 // Isolated Gemini API contract guard for Bolna.
-// Inline audio is sent through v1beta and an audio-capable model.
+// Inline audio uses the documented Interactions audio contract:
+// v1beta + gemini-3.7-flash + low thinking for latency.
 (() => {
   const nativeFetch = window.fetch.bind(window);
   window.fetch = function(input, init = {}) {
@@ -17,6 +18,7 @@
         const hasInlineAudio = Array.isArray(body?.input) && body.input.some(x => x?.type === 'audio');
         if (hasInlineAudio) {
           body.model = 'gemini-3.7-flash';
+          body.generation_config = { ...(body.generation_config || {}), thinking_level: 'low' };
           correctedInit = { ...init, body: JSON.stringify(body) };
         }
       } catch {}
@@ -25,5 +27,5 @@
     if (typeof input === 'string') return nativeFetch(correctedUrl, correctedInit);
     return nativeFetch(new Request(correctedUrl, input), correctedInit);
   };
-  window.__bolnaApiContractFix = 'v1beta-audio-model-guard';
+  window.__bolnaApiContractFix = 'v1beta-audio-model-thinking-guard';
 })();

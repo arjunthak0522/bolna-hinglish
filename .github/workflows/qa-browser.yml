@@ -21,6 +21,7 @@ jobs:
           node --check api/gemini.js
           node --check tests/bolna.spec.js
           node --check tests/reliability.spec.js
+          node --check tests/microphone.spec.js
           node --check playwright.config.js
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e

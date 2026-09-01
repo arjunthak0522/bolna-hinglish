@@ -1,4 +1,4 @@
-let bolnaAudioContext=null,bolnaSource=null;
+let bolnaAudioContext=null,bolnaPlaybackSource=null;
 function unlockBolnaAudio(){
   const C=window.AudioContext||window.webkitAudioContext;
   if(!C)return null;
@@ -12,13 +12,13 @@ async function playBlobThroughWebAudio(blob){
   if(ac.state==='suspended')await ac.resume();
   const buf=await blob.arrayBuffer();
   const audioBuf=await ac.decodeAudioData(buf.slice(0));
-  try{bolnaSource?.stop()}catch{}
+  try{bolnaPlaybackSource?.stop()}catch{}
   const src=ac.createBufferSource();
-  bolnaSource=src;
+  bolnaPlaybackSource=src;
   src.buffer=audioBuf;
   src.connect(ac.destination);
   src.start(0);
-  return new Promise(resolve=>{src.onended=()=>{if(bolnaSource===src)bolnaSource=null;resolve()}});
+  return new Promise(resolve=>{src.onended=()=>{if(bolnaPlaybackSource===src)bolnaPlaybackSource=null;resolve()}});
 }
 playText=async function(text,slow=false){
   if(!text)return;
@@ -26,7 +26,7 @@ playText=async function(text,slow=false){
   if(ac?.state==='suspended')ac.resume().catch(()=>{});
   try{
     try{player?.pause()}catch{}
-    try{bolnaSource?.stop()}catch{}
+    try{bolnaPlaybackSource?.stop()}catch{}
     if(result){state='playing';error=null;render()}
     const blob=await speech(text,slow);
     await playBlobThroughWebAudio(blob);

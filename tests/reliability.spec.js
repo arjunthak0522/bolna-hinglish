@@ -69,7 +69,9 @@ test('empty TTS is classified without breaking result screen', async ({ page }) 
   });
   await openTyped(page);
   await page.getByRole('button', { name: 'Show me how to say it' }).click();
-  await page.getByRole('button', { name: /Hear it/i }).click();
+  const audioButton = page.getByRole('button', { name: /Hear it|Retry audio/i });
+  await expect(audioButton).toBeEnabled({ timeout: 5000 });
+  await audioButton.click();
   await expect(page.getByText(/Gemini returned no audio/)).toBeVisible();
   await expect(page.locator('.hinglish')).toBeVisible();
 });
@@ -82,7 +84,9 @@ test('invalid PCM is rejected cleanly', async ({ page }) => {
   });
   await openTyped(page);
   await page.getByRole('button', { name: 'Show me how to say it' }).click();
-  await page.getByRole('button', { name: /Hear it/i }).click();
+  const audioButton = page.getByRole('button', { name: /Hear it|Retry audio/i });
+  await expect(audioButton).toBeEnabled({ timeout: 5000 });
+  await audioButton.click();
   await expect(page.getByText(/invalid PCM audio/)).toBeVisible();
   await expect(page.locator('.hinglish')).toBeVisible();
 });

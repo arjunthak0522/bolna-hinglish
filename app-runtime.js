@@ -12,15 +12,28 @@ const coreSchema={type:'object',properties:{natural:{type:'string'},spokenForm:{
 const wordSchema={type:'object',properties:{word:{type:'string'},phonetic:{type:'string'},meaning:{type:'string'},note:{type:'string'}},required:['word','phonetic','meaning','note'],additionalProperties:false};
 const enrichSchema={type:'object',properties:{moreHindi:{type:'string'},polite:{type:'string'},casual:{type:'string'},words:{type:'array',items:wordSchema}},required:['moreHindi','polite','casual','words'],additionalProperties:false};
 const pronunciationRules=`BOLNA PRONUNCIATION STANDARD
-- Optimize for an American English speaker saying the phrase correctly, not academic transliteration.
-- No IPA. Hyphens only for useful syllable boundaries.
-- CAPS = gentle emphasis only.
-- Respect Hindi schwa deletion: karna -> KUR-naa.
-- Use relaxed uh/u when Roman a would cause a CAT/CAR vowel: bas -> bus, kar -> kur.
-- Use (n) only for true nasalization: yahin -> ya-HEE(n).
-- Keep English-origin words English: AC -> A-C, WhatsApp -> WhatsApp, UPI -> U-P-I, Google Maps -> Google Maps.
-- Avoid misleading English th for aspirated Hindi consonants.
-- Prefer connected-speech pronunciation over word-by-word transliteration.`;
+- Goal: tell an American English speaker what to physically say so the result sounds natural in contemporary Hindi/Hinglish. This is a learner pronunciation guide, not transliteration.
+- No IPA on the main screen. Use simple English-friendly syllables. Hyphens only when they genuinely help.
+- CAPS = gentle stress/emphasis, never shouting.
+- (n) means lightly nasalize the vowel before it. It is NOT a separate pronounced N consonant. Never write a hard final n when the sound is only vowel nasalization.
+- Critical nasal contrasts: hai (है) has no nasalization; hain (हैं) -> hai(n); mein (में) -> may(n); nahin (नहीं) -> nuh-HEE(n) or na-HEE(n) according to the natural phrase; yahin (यहीं) -> ya-HEE(n); kahin (कहीं) -> kuh-HEE(n).
+- Attach (n) to the vowel that is actually nasalized, not to the following word or as a standalone consonant.
+- Respect Hindi schwa deletion and natural word shape: karna -> KUR-naa, kar -> kur. Do not invent final vowels that native speakers do not say.
+- Avoid misleading American CAT/CAR vowels where Hindi uses a relaxed central vowel: bas -> bus, kar -> kur.
+- Distinguish common vowel qualities carefully: long aa -> aa; long ee -> EE; long oo -> OO; ai/ऐ should sound like the natural Hindi vowel in the phrase, not automatically English 'eye'.
+- Hindi r is a light tongue tap/flap. Do not encourage an exaggerated American r.
+- Do not use English 'th' as if aspirated Hindi t/d sounds were English TH. Where aspiration matters, choose a spelling/cue that does not imply the English think/this sound.
+- Keep English-origin words naturally English inside Hinglish: AC -> A-C, WhatsApp -> WhatsApp, UPI -> U-P-I, Google Maps -> Google Maps.
+- Prefer connected speech over word-by-word dictionary pronunciation. Reflect how the whole phrase flows naturally.
+- Do not over-capitalize. Mark only the syllables an American learner genuinely benefits from stressing.
+- Before returning phonetic, silently check: nasalization, vowel quality, aspiration, schwa deletion, Hindi r, English code-switch words, and connected-speech rhythm.
+Examples:
+  hai -> hai
+  hain -> hai(n)
+  yahin -> ya-HEE(n)
+  nahin -> nuh-HEE(n)
+  mein -> may(n)
+  Bhaiya, bas yahin rok dena. -> BHAI-yaa, bus ya-HEE(n) rohk DAY-naa`;
 
 const app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));

@@ -34,7 +34,7 @@ jobs:
           node --check api/gemini.js
           node --check api/health.js
 
-      - name: Detect Vercel token
+      - name: Probe exact Vercel project access
         id: auth
         shell: bash
         env:
@@ -43,9 +43,19 @@ jobs:
           if [ -z "$VERCEL_TOKEN" ]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
             echo "Controlled preview skipped: VERCEL_TOKEN is not configured."
-          else
-            echo "available=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          STATUS=$(curl --silent --output /tmp/project.json --write-out "%{http_code}" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
+          echo "Vercel project access HTTP $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("/tmp/project.json","utf8")||"{}"); console.log("Vercel project access category:", x.error?.code || x.error?.message || "unknown");'
+            exit 0
+          fi
+          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("/tmp/project.json","utf8")); if(x.id!==process.env.VERCEL_PROJECT_ID) throw new Error("wrong project"); console.log("Verified Vercel project:", x.name);'
+          echo "available=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy exact rescue source to preview only
         if: steps.auth.outputs.available == 'true'
@@ -56,8 +66,7 @@ jobs:
         run: |
           npm install --no-save vercel@latest
           rm -rf .vercel
-          npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
-          PREVIEW_URL=$(npx vercel deploy --yes --token="$VERCEL_TOKEN")
+          PREVIEW_URL=$(npx vercel deploy --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
           echo "url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
           echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
 

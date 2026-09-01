@@ -9,127 +9,142 @@ const core = {
   confidence: 0.98,
   phoneticConfidence: 'high',
 };
+const enrich = {
+  moreHindi: 'Bhaiya, bas yahin gaadi rok dena.',
+  polite: 'Bhaiya, please yahin rok dijiye.',
+  casual: 'Bhaiya, yahin rok do.',
+  words: [{ word: 'Bhaiya', phonetic: 'BHAI-yaa', meaning: 'brother / respectful address', note: 'Light stress on BHAI.' }],
+};
 
-async function installGeminiMock(page) {
-  const pcm = Buffer.alloc(12000).toString('base64');
-  await page.route('https://generativelanguage.googleapis.com/**', async route => {
+function pcmBase64() { return Buffer.alloc(4800).toString('base64'); }
+
+async function installApiMock(page, options = {}) {
+  const seen = [];
+  await page.route('https://hinglish-companion.vercel.app/api/gemini', async route => {
     const body = JSON.parse(route.request().postData() || '{}');
-    if (body.model === 'gemini-3.1-flash-tts-preview') {
-      return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_audio:{data:pcm,mime_type:'audio/pcm'}})});
-    }
-    const hasAudio = Array.isArray(body.input) && body.input.some(x => x && x.type === 'audio');
-    if (hasAudio) {
-      if (body.model !== 'gemini-3.7-flash') {
-        return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({error:{message:"The value 'audio' is not supported for 'type'"}})});
-      }
-      const thinking = body.generation_config?.thinking_level;
-      if (!['low','medium','high'].includes(thinking)) {
-        return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({error:{message:"'minimal' is not a supported thinking level for this model. Allowed values are: high, low, medium."}})});
-      }
-      return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:'Please stop right here.'})});
-    }
-    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:JSON.stringify(core)})});
+    seen.push(body);
+    const failure = options.failOperation === body.operation ? options.failure : null;
+    if (failure) return route.fulfill({ status: failure.status, contentType: 'application/json', body: JSON.stringify({ ok: false, category: failure.category }) });
+    if (body.operation === 'transcribe') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: 'Please stop right here.' } }) });
+    if (body.operation === 'generate') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(core) } }) });
+    if (body.operation === 'enrich') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(enrich) } }) });
+    if (body.operation === 'tts') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_audio: { data: pcmBase64(), mime_type: 'audio/pcm' } } }) });
+    return route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ ok: false, category: 'invalid_client_request' }) });
   });
+  return seen;
 }
 
-async function boot(page) {
-  await page.addInitScript(() => localStorage.setItem('bolna_gemini_key', 'qa-test-key'));
-  await installGeminiMock(page);
+async function boot(page, options) {
+  const seen = await installApiMock(page, options);
   await page.goto('/');
   await expect(page.locator('.brand')).toHaveText('bolna');
+  return seen;
 }
 
-test('clean runtime plus full guarded Gemini audio contract are loaded', async ({ page }) => {
+async function typedPhrase(page, text) {
+  await page.getByRole('button', { name: 'Type instead' }).click();
+  await page.locator('#typed').fill(text);
+  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await expect(page.locator('.hinglish')).toBeVisible();
+}
+
+test('only one authoritative runtime is loaded and no browser Gemini key is used', async ({ page }) => {
   await boot(page);
   const ownership = await page.evaluate(() => ({
     runtime: window.__bolnaRuntime,
-    apiFix: window.__bolnaApiContractFix,
-    endpoint: GEMINI_ENDPOINT,
-    scripts: [...document.scripts].map(s=>s.getAttribute('src')).filter(Boolean),
+    scripts: [...document.scripts].map(s => s.getAttribute('src')).filter(Boolean),
+    geminiKey: localStorage.getItem('bolna_gemini_key'),
+    diagnostics: window.__bolnaDiagnostics?.runtime,
   }));
-  expect(ownership.runtime).toBe('clean-v2');
-  expect(ownership.apiFix).toBe('v1beta-audio-model-thinking-guard');
-  expect(ownership.endpoint).toBe('https://generativelanguage.googleapis.com/v1/interactions');
-  expect(ownership.scripts).toEqual(['./api-contract-fix.js','./app-clean.js']);
+  expect(ownership.runtime).toBe('single-v1');
+  expect(ownership.diagnostics).toBe('single-v1');
+  expect(ownership.scripts).toEqual(['./app-runtime.js']);
+  expect(ownership.geminiKey).toBeNull();
 });
 
-test('inline audio uses v1beta + gemini-3.7-flash + low thinking', async ({ page }) => {
-  const seen=[];
-  await page.addInitScript(() => localStorage.setItem('bolna_gemini_key', 'qa-test-key'));
-  await page.route('https://generativelanguage.googleapis.com/**', async route => {
-    const body = JSON.parse(route.request().postData() || '{}');
-    seen.push({url:route.request().url(),model:body.model,input:body.input,thinking:body.generation_config?.thinking_level});
-    const hasAudio = Array.isArray(body.input) && body.input.some(x => x && x.type === 'audio');
-    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({output_text:hasAudio?'Please stop right here.':JSON.stringify(core)})});
-  });
-  await page.goto('/');
+test('transcription client always sends normalized WAV to secure backend', async ({ page }) => {
+  const seen = await boot(page);
   await page.evaluate(async () => {
-    const wav = new Blob([new Uint8Array(256)], {type:'audio/wav'});
+    const wav = encodeWavFromFloat(new Float32Array(3200), 16000);
     await transcribe(wav);
   });
-  const audioReq = seen.find(x => Array.isArray(x.input) && x.input.some(y => y && y.type === 'audio'));
-  expect(audioReq).toBeTruthy();
-  expect(audioReq.url).toContain('/v1beta/interactions');
-  expect(audioReq.url).not.toContain('/v1/interactions');
-  expect(audioReq.model).toBe('gemini-3.7-flash');
-  expect(audioReq.thinking).toBe('low');
+  const req = seen.find(x => x.operation === 'transcribe');
+  expect(req).toBeTruthy();
+  expect(req.audioMime).toBe('audio/wav');
+  expect(typeof req.audioData).toBe('string');
+  expect(req.audioData.length).toBeGreaterThan(100);
+  expect(req.model).toBeUndefined();
 });
 
-test('transcription plus generation complete without state freeze', async ({ page }) => {
+test('five consecutive phrase cycles recover without refresh', async ({ page }) => {
   await boot(page);
-  const elapsed = await page.evaluate(async () => {
-    const wav = new Blob([new Uint8Array(256)], {type:'audio/wav'});
-    const t0 = performance.now();
-    const text = await transcribe(wav);
-    const out = await generateCore(text);
-    return {ms:performance.now()-t0,text,out};
+  const phrases = [
+    'Stop here.',
+    'Can you turn the AC down a little?',
+    'Please send the location on WhatsApp.',
+    'Can I pay by UPI?',
+    'Please follow Google Maps and take the next left.',
+  ];
+  for (const phrase of phrases) {
+    await typedPhrase(page, phrase);
+    await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible();
+    await page.getByRole('button', { name: /Say something else/i }).click();
+    await expect(page.getByRole('button', { name: 'Tap to speak' })).toBeVisible();
+  }
+});
+
+test('five consecutive Hear It plays and repeated Slow recover', async ({ page }) => {
+  await boot(page);
+  await typedPhrase(page, 'Stop here.');
+  for (let i = 0; i < 5; i++) {
+    await page.getByRole('button', { name: /Hear it/i }).click();
+    await expect(page.getByRole('button', { name: /Hear it/i })).toBeEnabled({ timeout: 3000 });
+  }
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: /Slow/i }).click();
+    await expect(page.getByRole('button', { name: /Slow/i })).toBeEnabled({ timeout: 3000 });
+  }
+  const state = await page.evaluate(() => playbackCtx?.state || 'none');
+  expect(state).not.toBe('closed');
+});
+
+test('details keep pronunciation, meaning, polite, casual, More Hindi and breakdown', async ({ page }) => {
+  await boot(page);
+  await typedPhrase(page, 'Stop here.');
+  await expect(page.getByText('Say it like this')).toBeVisible();
+  await expect(page.getByText('Meaning')).toBeVisible();
+  await page.getByRole('button', { name: 'More polite' }).click();
+  await expect(page.getByText(enrich.polite)).toBeVisible();
+  await page.getByRole('button', { name: 'More casual' }).click();
+  await expect(page.getByText(enrich.casual)).toBeVisible();
+  await page.getByRole('button', { name: 'More Hindi' }).click();
+  await expect(page.getByText(enrich.moreHindi)).toBeVisible();
+  await page.getByRole('button', { name: 'Break it down' }).click();
+  await expect(page.getByText('BHAI-yaa', { exact: false })).toBeVisible();
+});
+
+for (const [name, failure, title] of [
+  ['400 provider rejection', { status: 400, category: 'provider_rejected_request' }, 'Provider rejected the request'],
+  ['403 bad configuration', { status: 403, category: 'invalid_api_configuration' }, 'Bolna is not configured'],
+  ['429 quota', { status: 429, category: 'quota_exhausted' }, 'Gemini quota reached'],
+  ['500 provider outage', { status: 500, category: 'provider_temporarily_unavailable' }, 'Gemini is temporarily unavailable'],
+]) {
+  test(`recovers from ${name}`, async ({ page }) => {
+    await boot(page, { failOperation: 'generate', failure });
+    await page.getByRole('button', { name: 'Type instead' }).click();
+    await page.locator('#typed').fill('Stop here.');
+    await page.getByRole('button', { name: 'Show me how to say it' }).click();
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tap to speak' })).toBeVisible();
   });
-  expect(elapsed.text).toBe('Please stop right here.');
-  expect(elapsed.out.natural).toBe(core.natural);
-  expect(elapsed.ms).toBeLessThan(1500);
-});
+}
 
-test('provider failures are distinguished from quota failures', async ({ page }) => {
+test('diagnostics expose stage and latency metadata without secrets', async ({ page }) => {
   await boot(page);
-  const messages = await page.evaluate(() => ({
-    quota: classifyError(429,{error:{message:'quota'}}).message,
-    provider: classifyError(500,{error:{message:'server'}}).message,
-    auth: classifyError(403,{error:{message:'denied'}}).message,
-  }));
-  expect(messages.quota).toContain('quota');
-  expect(messages.provider).toContain('temporarily unavailable');
-  expect(messages.auth).toContain('API key');
-});
-
-test('Gemini PCM is wrapped as valid WAV', async ({ page }) => {
-  await boot(page);
-  const sig = await page.evaluate(async () => {
-    const blob = await speech('Bhaiya, bas yahin rok dena.', false);
-    const bytes = new Uint8Array(await blob.arrayBuffer());
-    return String.fromCharCode(...bytes.slice(0,12));
-  });
-  expect(sig.slice(0,4)).toBe('RIFF');
-  expect(sig.slice(8,12)).toBe('WAVE');
-});
-
-test('three consecutive audio plays do not throw or close audio context', async ({ page }) => {
-  await boot(page);
-  const result = await page.evaluate(async () => {
-    const failures=[];
-    for(let i=0;i<3;i++){
-      try{await playText('Bhaiya, bas yahin rok dena.', false)}catch(e){failures.push(String(e?.message||e))}
-    }
-    return {failures, state: playbackCtx?.state || 'none'};
-  });
-  expect(result.failures).toEqual([]);
-  expect(result.state).not.toBe('closed');
-});
-
-test('typed phrase reaches ready UI', async ({ page }) => {
-  await boot(page);
-  await page.getByRole('button', { name: 'Type instead' }).click();
-  await page.locator('#typed').fill('Please stop right here.');
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
-  await expect(page.locator('.hinglish')).toHaveText(core.natural, { timeout: 3000 });
-  await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible();
+  await typedPhrase(page, 'Stop here.');
+  const data = await page.evaluate(() => JSON.stringify(window.__bolnaDiagnostics));
+  expect(data).toContain('generate');
+  expect(data).toContain('ms');
+  expect(data).not.toContain('GEMINI_API_KEY');
+  expect(data).not.toMatch(/AIza[0-9A-Za-z_-]+/);
 });

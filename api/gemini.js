@@ -5,6 +5,13 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:4173',
 ]);
 
+const LIMITS = Object.freeze({
+  audioBase64Chars: 1_000_000,
+  promptChars: 12_000,
+  ttsChars: 1_000,
+  schemaChars: 16_000,
+});
+
 const MODELS = Object.freeze({
   transcribe: 'gemini-3.5-flash-lite',
   generate: 'gemini-3.5-flash-lite',
@@ -59,12 +66,24 @@ async function callGemini(apiKey, body, timeoutMs) {
 function validateOperation(body) {
   if (!body || typeof body !== 'object') return 'Request body must be JSON.';
   if (!['transcribe', 'generate', 'enrich', 'tts'].includes(body.operation)) return 'Unsupported operation.';
+
   if (body.operation === 'transcribe') {
     if (typeof body.audioData !== 'string' || !body.audioData) return 'audioData is required.';
     if (body.audioMime !== 'audio/wav') return 'Bolna transcription requires normalized audio/wav.';
+    if (body.audioData.length > LIMITS.audioBase64Chars) return 'Recording is too large.';
   }
-  if ((body.operation === 'generate' || body.operation === 'enrich') && typeof body.prompt !== 'string') return 'prompt is required.';
-  if (body.operation === 'tts' && typeof body.text !== 'string') return 'text is required.';
+
+  if (body.operation === 'generate' || body.operation === 'enrich') {
+    if (typeof body.prompt !== 'string' || !body.prompt.trim()) return 'prompt is required.';
+    if (body.prompt.length > LIMITS.promptChars) return 'Prompt is too large.';
+    if (body.schema && JSON.stringify(body.schema).length > LIMITS.schemaChars) return 'Schema is too large.';
+  }
+
+  if (body.operation === 'tts') {
+    if (typeof body.text !== 'string' || !body.text.trim()) return 'text is required.';
+    if (body.text.length > LIMITS.ttsChars) return 'Speech text is too large.';
+  }
+
   return null;
 }
 
@@ -110,7 +129,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, category: 'method_not_allowed' });
 
   const origin = req.headers.origin || '';
-  if (origin && !ALLOWED_ORIGINS.has(origin)) return send(res, 403, { ok: false, category: 'origin_not_allowed' });
+  if (!ALLOWED_ORIGINS.has(origin)) return send(res, 403, { ok: false, category: 'origin_not_allowed' });
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return send(res, 500, { ok: false, category: 'invalid_api_configuration', message: 'Gemini provider is not configured.' });

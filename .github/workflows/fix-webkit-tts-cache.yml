@@ -1,0 +1,26 @@
+name: Fix WebKit TTS Cache
+
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".fix-webkit-tts-cache-trigger"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - run: python .github/scripts/fix_webkit_tts_cache.py
+      - run: node --check app-runtime.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Store persistent TTS cache as raw bytes"
+          git push origin HEAD:rescue-single-runtime

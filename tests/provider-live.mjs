@@ -92,7 +92,7 @@ function pcmToWavBase64(pcmBase64, sampleRate = 24000) {
 }
 
 const tts = await call({
-  model: 'gemini-3.1-flash-tts-preview',
+  model: 'gemini-2.5-flash-preview-tts',
   input: 'Synthesize speech only in a natural adult Indian male voice. Spoken transcript begins now: Stop here.',
   response_format: { type: 'audio' },
   generation_config: { speech_config: [{ voice: 'Rasalgethi' }] },

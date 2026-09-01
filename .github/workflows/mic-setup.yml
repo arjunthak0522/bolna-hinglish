@@ -1,0 +1,23 @@
+name: Bolna Mic Setup Patch
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".mic-setup-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+          fetch-depth: 0
+      - run: python .github/scripts/mic_setup.py
+      - run: node --check app-runtime.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add app-runtime.js
+          git commit -m "Add one-time microphone setup flow"
+          git push origin HEAD:rescue-single-runtime

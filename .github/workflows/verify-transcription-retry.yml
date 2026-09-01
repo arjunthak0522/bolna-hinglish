@@ -1,0 +1,22 @@
+name: Verify Transcription Retry
+
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".verify-transcription-retry-trigger"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check api/gemini.js
+      - run: node tests/gateway-transcription-retry.test.js

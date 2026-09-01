@@ -1,5 +1,6 @@
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 const ALLOWED_ORIGINS = new Set([
+  'https://hinglish-companion.vercel.app',
   'https://arjunthak0522.github.io',
   'http://127.0.0.1:4173',
   'http://localhost:4173',

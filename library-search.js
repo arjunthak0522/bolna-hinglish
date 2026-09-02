@@ -11,10 +11,12 @@
     ['guard','security','watchman'],
     ['chemist','pharmacy','medical store'],
     ['price','cost','expensive','cheap','amount'],
+    ['high','expensive','costly','overpriced','too much'],
     ['wait','stay','hold on'],
-    ['repair','fix','broken','not working','problem'],
+    ['repair','fix','broken','blocked','clogged','not working','problem','issue'],
     ['delivery','package','parcel','courier'],
     ['bill','check'],
+    ['food','meal','dish','restaurant'],
     ['spicy','chili','chilli','hot'],
     ['not','no','without','less'],
     ['water','tap'],
@@ -52,11 +54,6 @@
     ['morning','am'],
     ['evening','night','pm']
   ];
-  const intentHints={
-    'The toilet is blocked.':'washroom toilet problem bathroom toilet issue blocked clogged',
-    'Please make it a little less spicy.':'food not spicy restaurant less chili less spicy mild food',
-    'That is too expensive.':'veggies price high vegetables expensive produce high price cost too much'
-  };
   const stopWords=new Set(['a','an','the','i','you','we','they','he','she','it','can','could','would','should','do','does','did','is','are','am','be','to','for','of','my','your']);
   const aliasMap=new Map();
   for(const group of aliasGroups){
@@ -92,7 +89,7 @@
     const q=normalize(query);if(!q)return 1;
     const qWords=queryWords(q);
     const english=normalize(phrase.english);
-    const meta=normalize(`${phrase.search||''} ${intentHints[phrase.english]||''} ${phrase.category||''} ${phrase.context||''}`);
+    const meta=normalize(`${phrase.search||''} ${phrase.category||''} ${phrase.context||''}`);
     const englishWords=words(english),metaWords=words(meta);
     let score=0,matched=0;
     if(english.includes(q))score+=80;

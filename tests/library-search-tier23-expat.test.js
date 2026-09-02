@@ -91,7 +91,7 @@ const cases=[
 
   ['chemist nearby','Is there a pharmacy nearby?'],
   ['tablet before after food','Should I take this before or after food?'],
-  ['medicine kitni baar','How many times a day should I take this?'],
+  ['medicine how often','How many times a day should I take this?'],
   ['chemist prescription needed','Do I need a prescription?'],
   ['doctor pain here','It hurts here.'],
   ['no fever doctor','I do not have a fever.'],

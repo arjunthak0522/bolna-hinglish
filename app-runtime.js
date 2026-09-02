@@ -91,8 +91,7 @@ async function provider(operation,payload={},timeoutMs=20000){
 function outText(x){if(x?.output_text)return x.output_text.trim();const a=[];for(const s of x?.steps||[])for(const c of s?.content||[])if(c.type==='text')a.push(c.text);return a.join('').trim()}
 function outAudio(x){if(x?.output_audio?.data)return x.output_audio;for(const s of x?.steps||[])for(const c of s?.content||[])if(c.type==='audio')return{data:c.data,mime_type:c.mime_type};return null}
 function voiceCorePrompt(){return `You are Bolna's expert contemporary Hinglish speaker and Hindi pronunciation coach for American English speakers.
-Listen to the short English utterance. Return the exact English transcript plus the natural contemporary Hinglish response and learner pronunciation.
-Context: ${JSON.stringify(context)}
+Listen to the short English utterance. The transcript MUST come only from the audio. Return the exact English transcript plus the natural contemporary Hinglish response and learner pronunciation.
 Return only: transcript, natural, spokenForm, phonetic, meaning, speechText, confidence, phoneticConfidence.
 ${pronunciationRules}
 The phonetic field is critical and must be usable even when audio is unavailable. speechText MUST be the generated Hinglish phrase to speak, never the English transcript.

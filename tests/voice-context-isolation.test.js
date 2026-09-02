@@ -1,0 +1,10 @@
+const fs=require('fs');
+const s=fs.readFileSync('app-runtime.js','utf8');
+const start=s.indexOf('function voiceCorePrompt()');
+const end=s.indexOf('function corePrompt',start);
+if(start<0||end<0)throw new Error('voiceCorePrompt not found');
+const prompt=s.slice(start,end);
+if(prompt.includes('JSON.stringify(context)'))throw new Error('context still present in voice core prompt');
+if(!prompt.includes('transcript MUST come only from the audio'))throw new Error('audio-only transcript rule missing');
+if(!s.includes('Context: ${JSON.stringify(context)}'))throw new Error('context unexpectedly removed from non-voice generation');
+console.log('voice context isolation PASS');

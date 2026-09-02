@@ -4,9 +4,9 @@ on:
     branches: ["library-search-v2"]
     paths: [".library-search-v2-trigger"]
 permissions:
-  contents: write
+  contents: read
 jobs:
-  integrate:
+  qa:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,21 +16,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply deterministic Library integration
-        run: node scripts/apply-library-search-v2.js
-      - name: Verify integration syntax
+      - name: Verify committed integration is deterministic
+        run: |
+          node scripts/apply-library-search-v2.js
+          git diff --exit-code
+      - name: Syntax checks
         run: |
           node --check app-runtime.js
+          node --check library-search.js
           node --check phrase-library-expanded.js
-          git diff --check
-      - name: Commit integration only
+      - name: Verify production voice runtime untouched
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app-runtime.js phrase-library-expanded.js
-          if git diff --cached --quiet; then
-            echo "Integration already committed"
-            exit 0
-          fi
-          git commit -m "Integrate intelligent English Library search"
-          git push origin HEAD:library-search-v2
+          git show d4e7016ab6c32bab28eff0de874568b542aec2e1:app-runtime.js > /tmp/prod-runtime.js
+          node scripts/verify-library-isolation.js /tmp/prod-runtime.js app-runtime.js
+      - name: Library data and search benchmarks
+        run: |
+          node tests/library-data.test.js
+          node tests/library-search-intelligence.test.js
+          node tests/voice-context-isolation.test.js
+      - name: Browser regression suite
+        run: |
+          npm install
+          npx playwright install --with-deps chromium webkit
+          npm run test:e2e

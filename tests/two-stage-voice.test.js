@@ -1,0 +1,13 @@
+const fs=require('fs');
+const s=fs.readFileSync('app-runtime.js','utf8');
+const start=s.indexOf('async function startListening()');
+const end=s.indexOf('async function submitTyped()',start);
+if(start<0||end<0)throw new Error('startListening block not found');
+const flow=s.slice(start,end);
+if(flow.includes('voiceCore(b)'))throw new Error('combined voice_core still used by microphone flow');
+const t=flow.indexOf('transcript=await transcribe(b)');
+const i=flow.indexOf('const inferred=infer(transcript)');
+const g=flow.indexOf('const d=await generateCore(transcript)');
+if(!(t>=0&&i>t&&g>i))throw new Error('expected transcribe -> infer context -> generate order missing');
+if(!flow.includes("state='generating';render();"))throw new Error('generating state missing between stages');
+console.log('two-stage voice architecture PASS');

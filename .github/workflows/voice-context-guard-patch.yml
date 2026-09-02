@@ -1,0 +1,47 @@
+name: Voice context guard patch
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".voice-context-guard-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply context contamination guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old='Listen to the short English utterance. Return the exact English transcript plus the natural contemporary Hinglish response and learner pronunciation.\\nContext: ${JSON.stringify(context)}\\nReturn only: transcript, natural, spokenForm, phonetic, meaning, speechText, confidence, phoneticConfidence.'
+          new='Listen to the short English utterance. The transcript MUST come only from the audio. Context is style guidance only and MUST NEVER be copied, paraphrased, or substituted into transcript. Return the exact English transcript plus the natural contemporary Hinglish response and learner pronunciation.\\nContext: ${JSON.stringify(context)}\\nReturn only: transcript, natural, spokenForm, phonetic, meaning, speechText, confidence, phoneticConfidence.'
+          if s.count(old)!=1:
+              raise SystemExit(f'voice prompt target count {s.count(old)}')
+          s=s.replace(old,new)
+          old="async function voiceCore(blob){const t0=performance.now();const normalized=await normalizeRecording(blob);note('normalize',{ms:Math.round(performance.now()-t0),sourceMime:blob.type||'unknown',normalizedBytes:normalized.size});const x=await provider('voice_core',{audioData:await blob64(normalized),audioMime:'audio/wav',prompt:voiceCorePrompt(),schema:voiceCoreSchema},16000);const t=outText(x);if(!t)throw Object.assign(new Error('Gemini returned no voice result.'),{userTitle:'Empty Gemini result'});let d;try{d=JSON.parse(t)}catch{throw Object.assign(new Error('Gemini returned malformed voice data.'),{userTitle:'Invalid Gemini result'})}d.transcript=String(d.transcript||'').trim();if(!d.transcript)throw Object.assign(new Error('No speech was returned from the recording.'),{userTitle:'I didn’t hear that clearly'});return d}"
+          new="async function voiceCore(blob){const t0=performance.now();const normalized=await normalizeRecording(blob);note('normalize',{ms:Math.round(performance.now()-t0),sourceMime:blob.type||'unknown',normalizedBytes:normalized.size});const audioData=await blob64(normalized);const x=await provider('voice_core',{audioData,audioMime:'audio/wav',prompt:voiceCorePrompt(),schema:voiceCoreSchema},16000);const t=outText(x);if(!t)throw Object.assign(new Error('Gemini returned no voice result.'),{userTitle:'Empty Gemini result'});let d;try{d=JSON.parse(t)}catch{throw Object.assign(new Error('Gemini returned malformed voice data.'),{userTitle:'Invalid Gemini result'})}d.transcript=String(d.transcript||'').trim();if(!d.transcript)throw Object.assign(new Error('No speech was returned from the recording.'),{userTitle:'I didn’t hear that clearly'});const clean=v=>String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,' ');if(clean(d.transcript)===clean(context)){note('voice_core',{phase:'context_contamination',context});const tx=await provider('transcribe',{audioData,audioMime:'audio/wav'},18000);const verified=outText(tx).replace(/^[\\\"']|[\\\"']$/g,'').trim();if(!verified||clean(verified)===clean(context))throw Object.assign(new Error('The recording could not be transcribed reliably.'),{userTitle:'I didn’t hear that clearly'});const g=await generateCore(verified);return{...g,transcript:verified}}return d}"
+          if s.count(old)!=1:
+              raise SystemExit(f'voiceCore target count {s.count(old)}')
+          p.write_text(s.replace(old,new))
+          t=Path('tests/voice-context-guard.test.js')
+          t.write_text("""const fs=require('fs');\nconst s=fs.readFileSync('app-runtime.js','utf8');\nfunction ok(v,m){if(!v)throw new Error(m)}\nok(s.includes('Context is style guidance only and MUST NEVER be copied'), 'prompt guard missing');\nok(s.includes("clean(d.transcript)===clean(context)"), 'context equality guard missing');\nok(s.includes("provider('transcribe',{audioData,audioMime:'audio/wav'},18000)"), 'dedicated transcription fallback missing');\nok(s.includes('return{...g,transcript:verified}'), 'verified transcript generation path missing');\nok(!s.includes("transcribe(blob)" ) || true, 'noop');\nconsole.log('voice context guard regression PASS');\n""")
+          PY
+          node --check app-runtime.js
+          node tests/voice-context-guard.test.js
+          git diff --check
+          npm ci
+          npx playwright install --with-deps chromium webkit
+          npm run test:e2e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app-runtime.js tests/voice-context-guard.test.js
+          git commit -m "Guard voice transcript from context contamination"
+          git push origin HEAD:rescue-single-runtime

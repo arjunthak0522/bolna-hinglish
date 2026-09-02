@@ -1,0 +1,41 @@
+name: Remove context from voice core v2
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".remove-context-from-voice-v2-trigger"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rescue-single-runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply and validate voice context isolation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="function voiceCorePrompt(){return `You are Bolna's expert contemporary Hinglish speaker and Hindi pronunciation coach for American English speakers.\nListen to the short English utterance. Return the exact English transcript plus the natural contemporary Hinglish response and learner pronunciation.\nContext: ${JSON.stringify(context)}\nReturn only: transcript, natural, spokenForm, phonetic, meaning, speechText, confidence, phoneticConfidence."
+          new="function voiceCorePrompt(){return `You are Bolna's expert contemporary Hinglish speaker and Hindi pronunciation coach for American English speakers.\nListen to the short English utterance. The transcript MUST come only from the audio. Return the exact English transcript plus the natural contemporary Hinglish response and learner pronunciation.\nReturn only: transcript, natural, spokenForm, phonetic, meaning, speechText, confidence, phoneticConfidence."
+          if s.count(old)!=1:
+              raise SystemExit(f'voice prompt target count {s.count(old)}')
+          p.write_text(s.replace(old,new))
+          Path('tests/voice-context-isolation.test.js').write_text("""const fs=require('fs');\nconst s=fs.readFileSync('app-runtime.js','utf8');\nconst start=s.indexOf('function voiceCorePrompt()');\nconst end=s.indexOf('function corePrompt',start);\nif(start<0||end<0)throw new Error('voiceCorePrompt not found');\nconst prompt=s.slice(start,end);\nif(prompt.includes('JSON.stringify(context)'))throw new Error('context still present in voice core prompt');\nif(!prompt.includes('transcript MUST come only from the audio'))throw new Error('audio-only transcript rule missing');\nif(!s.includes('Context: ${JSON.stringify(context)}'))throw new Error('context unexpectedly removed from non-voice generation');\nconsole.log('voice context isolation PASS');\n""")
+          PY
+          node --check app-runtime.js
+          node tests/voice-context-isolation.test.js
+          git diff --check
+          npm install
+          npx playwright install --with-deps chromium webkit
+          npm run test:e2e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app-runtime.js tests/voice-context-isolation.test.js
+          git commit -m "Isolate voice transcription from context"
+          git push origin HEAD:rescue-single-runtime

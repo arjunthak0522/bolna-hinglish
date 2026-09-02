@@ -4,7 +4,7 @@
   if(root)root.BOLNA_LIBRARY_SEARCH=api;
 })(typeof window!=='undefined'?window:globalThis,function(){
   const aliasGroups=[
-    ['distance','far','nearby','close'],
+    ['distance','far','nearby','close','closest','nearest'],
     ['mall','shopping center','shopping centre'],
     ['cab','taxi','uber','ola','driver','ride','auto'],
     ['maid','cleaner','house help','housekeeper','domestic help'],
@@ -16,6 +16,7 @@
     ['delivery','package','parcel','courier'],
     ['bill','check'],
     ['spicy','chili','chilli','hot'],
+    ['not','no','without','less'],
     ['water','tap'],
     ['bathroom','toilet','washroom','restroom'],
     ['dog','pet'],
@@ -35,6 +36,7 @@
     ['upstairs','up'],
     ['downstairs','down'],
     ['arrive','reach','come'],
+    ['come','enter','allowed','inside','indoors'],
     ['leave','go'],
     ['call','phone','ring'],
     ['location','address','where'],
@@ -50,6 +52,7 @@
     ['morning','am'],
     ['evening','night','pm']
   ];
+  const stopWords=new Set(['a','an','the','i','you','we','they','he','she','it','can','could','would','should','do','does','did','is','are','am','be','to','for','of','my','your']);
   const aliasMap=new Map();
   for(const group of aliasGroups){
     const words=group.map(normalize);
@@ -57,6 +60,11 @@
   }
   function normalize(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ')}
   function words(s){return normalize(s).split(' ').filter(Boolean)}
+  function queryWords(s){
+    const all=words(s);
+    const useful=all.filter(x=>!stopWords.has(x));
+    return useful.length?useful:all;
+  }
   function nearWord(a,b){
     if(a===b)return true;
     if(a.length<5||b.length<5||Math.abs(a.length-b.length)>1)return false;
@@ -77,7 +85,7 @@
   }
   function scorePhrase(phrase,query){
     const q=normalize(query);if(!q)return 1;
-    const qWords=words(q);
+    const qWords=queryWords(q);
     const english=normalize(phrase.english);
     const meta=normalize(`${phrase.search||''} ${phrase.category||''} ${phrase.context||''}`);
     const englishWords=words(english),metaWords=words(meta);
@@ -94,6 +102,8 @@
         if(ex===token)continue;
         if(englishWords.includes(ex))best=Math.max(best,8);
         if(metaWords.includes(ex))best=Math.max(best,5);
+        if(englishWords.some(w=>w.startsWith(ex)||ex.startsWith(w)))best=Math.max(best,6);
+        if(metaWords.some(w=>w.startsWith(ex)||ex.startsWith(w)))best=Math.max(best,4);
       }
       if(!best&&englishWords.some(w=>nearWord(token,w)))best=5;
       if(!best&&metaWords.some(w=>nearWord(token,w)))best=3;

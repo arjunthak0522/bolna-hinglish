@@ -66,4 +66,4 @@ for(const [queries,expected] of cases){
 }
 const top3Rate=top3/total;
 console.log(JSON.stringify({phrases:lib.length,total,top1,top3,top1Rate:top1/total,top3Rate,failures},null,2));
-if(top3Rate<0.90)throw new Error(`Top-3 search accuracy ${(top3Rate*100).toFixed(1)}% is below 90%`);
+if(failures.length)throw new Error(`Top-3 search misses remain: ${failures.map(x=>x.q).join(', ')}`);

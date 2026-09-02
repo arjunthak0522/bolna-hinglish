@@ -28,7 +28,7 @@ const extra=[
 
 {category:'Apartment & maintenance',context:'Household',english:'The AC is not cooling properly.',natural:'AC theek se cool nahin kar raha hai.',phonetic:'A-C theek say cool nuh-HEE(n) kur RAA-haa hai',search:'ac air conditioner not cold cooling broken repair'},
 {category:'Apartment & maintenance',context:'Household',english:'The water pressure is low.',natural:'Water pressure kam hai.',phonetic:'water pressure kum hai',search:'water tap pressure weak low'},
-{category:'Apartment & maintenance',context:'Household',english:'The internet is not working.',natural:'Internet kaam nahin kar raha hai.',phonetic:'internet kaam nuh-HEE(n) kur RAA-haa hai',search:'wifi wi fi internet broken repair'},
+{category:'Apartment & maintenance',context:'Household',english:'The internet is not working.',natural:'Internet kaam nahin kar raha hai.',phonetic:'internet kaam nuh-HEE(n) kur RAA-haa hai',search:'wifi wi fi internet broken repair down offline disconnected not working'},
 {category:'Apartment & maintenance',context:'Household',english:'The power keeps going out.',natural:'Power baar baar ja rahi hai.',phonetic:'power baar baar jaa RAA-hee hai',search:'electricity power outage light keeps going off'},
 {category:'Apartment & maintenance',context:'Household',english:'There is a leak under the sink.',natural:'Sink ke neeche leak hai.',phonetic:'sink kay NEE-chay leak hai',search:'water leak kitchen sink plumber'},
 {category:'Apartment & maintenance',context:'Household',english:'The toilet is blocked.',natural:'Toilet block ho gaya hai.',phonetic:'toilet block hoh GU-yaa hai',search:'toilet bathroom washroom blocked clogged plumber'},
@@ -77,7 +77,7 @@ const extra=[
 {category:'Doctor & pharmacy',context:'Doctor',english:'It hurts here.',natural:'Yahan dard ho raha hai.',phonetic:'yu-HAAN durd hoh RAA-haa hai',search:'doctor pain hurts location'},
 {category:'Doctor & pharmacy',context:'Doctor',english:'I do not have a fever.',natural:'Mujhe fever nahin hai.',phonetic:'moo-jhay fever nuh-HEE(n) hai',search:'doctor fever no fever symptom'},
 {category:'Doctor & pharmacy',context:'Doctor',english:'I am allergic to this medicine.',natural:'Mujhe is medicine se allergy hai.',phonetic:'moo-jhay iss medicine say allergy hai',search:'doctor pharmacy allergy medicine medication'},
-{category:'Doctor & pharmacy',context:'Doctor',english:'Should I take this before or after food?',natural:'Yeh khane se pehle lena hai ya baad mein?',phonetic:'yay KHAA-nay say PAY-lay LAY-naa hai yaa baad may(n)',search:'medicine tablet food before after dose'},
+{category:'Doctor & pharmacy',context:'Doctor',english:'Should I take this before or after food?',natural:'Yeh khane se pehle lena hai ya baad mein?',phonetic:'yay KHAA-nay say PAY-lay LAY-naa hai yaa baad may(n)',search:'medicine tablet food before after dose empty stomach with food without food'},
 {category:'Doctor & pharmacy',context:'Doctor',english:'How many times a day should I take this?',natural:'Yeh din mein kitni baar lena hai?',phonetic:'yay din may(n) KIT-nee baar LAY-naa hai',search:'medicine tablet dose times day frequency'},
 {category:'Doctor & pharmacy',context:'Doctor',english:'Do I need a prescription?',natural:'Iske liye prescription chahiye?',phonetic:'ISS-kay LEE-yay prescription CHAA-hee-yay',search:'pharmacy chemist prescription medicine'},
 {category:'Doctor & pharmacy',context:'Doctor',english:'When should I take the next dose?',natural:'Next dose kab lena hai?',phonetic:'next dose kub LAY-naa hai',search:'medicine tablet dose next time'},

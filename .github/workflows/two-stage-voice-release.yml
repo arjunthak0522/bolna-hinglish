@@ -1,0 +1,58 @@
+name: Two Stage Voice Production Release
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".two-stage-voice-release-trigger"]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      RELEASE_SHA: 978989c3bea5862000566d910ff83c25411b7d9a
+      PROD_ORIGIN: https://hinglish-companion.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify exact tested source and result-before-audio contract
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          node --check app-runtime.js
+          node tests/two-stage-voice.test.js
+          node tests/voice-context-isolation.test.js
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('app-runtime.js','utf8');
+          const a=s.indexOf('async function startListening()');
+          const b=s.indexOf('async function submitTyped()',a);
+          const f=s.slice(a,b);
+          const ready=f.indexOf("state='ready';remember();render();");
+          const tts=f.indexOf('void prefetchVoice(result.speechText)');
+          if(!(ready>=0&&tts>ready))throw new Error('result must render before TTS prefetch');
+          if(!s.includes('<p class="phonetic">${esc(result.phonetic)}</p>'))throw new Error('phonetic display missing');
+          NODE
+      - name: Deploy verified source to production once
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          PROD_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
+      - name: Verify production fingerprint and two-stage flow
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          HEALTH=$(npx vercel curl /api/health --deployment "$PROD_URL")
+          node -e 'const h=JSON.parse(process.argv[1]); if(!h.ok||h.environment!=="production"||h.commit!==process.env.RELEASE_SHA) throw new Error("production fingerprint mismatch");' "$HEALTH"
+          JS=$(npx vercel curl /app-runtime.js --deployment "$PROD_ORIGIN")
+          node -e 'const s=process.argv[1],a=s.indexOf("async function startListening()"),b=s.indexOf("async function submitTyped()",a),f=s.slice(a,b); const t=f.indexOf("transcript=await transcribe(b)"),g=f.indexOf("const d=await generateCore(transcript)"),r=f.indexOf("state=\"ready\""); if(t<0||g<t||f.includes("voiceCore(b)")) throw new Error("two-stage voice flow not live"); if(!s.includes("<p class=\"phonetic\">${esc(result.phonetic)}</p>")) throw new Error("phonetic display missing in production"); if(f.indexOf("void prefetchVoice(result.speechText)")<f.indexOf("render();void prefetchVoice(result.speechText)")){}' "$JS"

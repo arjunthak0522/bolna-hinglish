@@ -1,0 +1,63 @@
+name: Restore Single Fix Production
+on:
+  push:
+    branches: ["rescue-single-runtime"]
+    paths: [".restore-single-fix-production-trigger"]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      RELEASE_SHA: d4e7016ab6c32bab28eff0de874568b542aec2e1
+      PROD_ORIGIN: https://hinglish-companion.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify exact forensic runtime
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          node --check app-runtime.js
+          node tests/voice-context-isolation.test.js
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('app-runtime.js','utf8');
+          const a=s.indexOf('function voiceCorePrompt()');
+          const b=s.indexOf('function corePrompt',a);
+          const prompt=s.slice(a,b);
+          if(prompt.includes('JSON.stringify(context)'))throw new Error('context present in voice prompt');
+          const c=s.indexOf('async function startListening()');
+          const d=s.indexOf('async function submitTyped()',c);
+          const flow=s.slice(c,d);
+          if(!flow.includes('const d=await voiceCore(b)'))throw new Error('known-good combined voice flow missing');
+          if(flow.includes('transcript=await transcribe(b)'))throw new Error('two-stage flow returned');
+          const ready=flow.indexOf("state='ready';remember();render();");
+          const tts=flow.indexOf('void prefetchVoice(result.speechText)');
+          if(!(ready>=0&&tts>ready))throw new Error('result must render before audio prefetch');
+          if(!s.includes('<p class="phonetic">${esc(result.phonetic)}</p>'))throw new Error('phonetic display missing');
+          NODE
+      - name: Deploy exact tested source once
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          PROD_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
+      - name: Verify production fingerprint and runtime
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          HEALTH=$(npx vercel curl /api/health --deployment "$PROD_URL")
+          node -e 'const h=JSON.parse(process.argv[1]); if(!h.ok||h.environment!=="production"||h.commit!==process.env.RELEASE_SHA) throw new Error("production fingerprint mismatch");' "$HEALTH"
+          JS=$(npx vercel curl /app-runtime.js --deployment "$PROD_ORIGIN")
+          node -e 'const s=process.argv[1],a=s.indexOf("function voiceCorePrompt()"),b=s.indexOf("function corePrompt",a),p=s.slice(a,b),c=s.indexOf("async function startListening()"),d=s.indexOf("async function submitTyped()",c),f=s.slice(c,d); if(p.includes("JSON.stringify(context)")) throw new Error("context contamination path live"); if(!f.includes("const d=await voiceCore(b)")) throw new Error("known-good voice flow not live"); if(f.includes("transcript=await transcribe(b)")) throw new Error("two-stage flow still live");' "$JS"

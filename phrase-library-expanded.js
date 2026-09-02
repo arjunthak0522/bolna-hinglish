@@ -115,7 +115,6 @@ const extra=[
 
 {category:'Errands & local life',context:'Shopkeeper',english:'Where is the nearest ATM?',natural:'Nearest ATM kahan hai?',phonetic:'nearest A-T-M ku-HAAN hai',search:'atm cash bank nearby closest directions'},
 {category:'Errands & local life',context:'Shopkeeper',english:'Where is the nearest pharmacy?',natural:'Nearest pharmacy kahan hai?',phonetic:'nearest pharmacy ku-HAAN hai',search:'chemist medical store medicine nearby closest'},
-{category:'Errands & local life',context:'Shopkeeper',english:'Where is the nearest grocery store?',natural:'Nearest grocery store kahan hai?',phonetic:'nearest grocery store ku-HAAN hai',search:'supermarket grocery nearby closest directions'},
 {category:'Errands & local life',context:'Shopkeeper',english:'What time do you close?',natural:'Aap kitne baje close karte hain?',phonetic:'aap KIT-nay bu-JAY close KUR-tay hai(n)',search:'shop store closing time hours'},
 {category:'Errands & local life',context:'Shopkeeper',english:'Are you open tomorrow?',natural:'Kal open hain?',phonetic:'kul open hai(n)',search:'shop store tomorrow open hours'},
 {category:'Errands & local life',context:'Shopkeeper',english:'Can I get a receipt?',natural:'Receipt mil sakti hai?',phonetic:'receipt mil SUK-tee hai',search:'shopping payment receipt bill'},

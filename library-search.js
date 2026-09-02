@@ -29,7 +29,8 @@
     ['home','house','apartment','flat'],
     ['garbage','trash','rubbish','waste'],
     ['electricity','power','light','current','bijli'],
-    ['outage','out','off','gone'],
+    ['outage','out','gone'],
+    ['cancel','off','skip','day off','not needed'],
     ['internet','wifi','wi fi','broadband'],
     ['money','cash','payment','pay'],
     ['change','coins','small notes'],
@@ -56,7 +57,7 @@
     ['morning','am'],
     ['evening','night','pm']
   ];
-  const stopWords=new Set(['a','an','the','i','you','we','they','he','she','it','can','could','would','should','do','does','did','is','are','am','be','to','for','of','my','your','again','please']);
+  const stopWords=new Set(['a','an','the','i','you','we','they','he','she','it','this','that','these','those','can','could','would','should','do','does','did','is','are','am','be','to','for','of','my','your','again','please']);
   const aliasMap=new Map();
   for(const group of aliasGroups){
     const words=group.map(normalize);

@@ -33,11 +33,27 @@ jobs:
           node tests/library-search-intelligence.test.js
           node tests/voice-context-isolation.test.js
       - name: Browser regression suite
+        id: browser
+        continue-on-error: true
         run: |
           npm install
           npx playwright install --with-deps chromium webkit
-          npm run test:e2e
+          set +e
+          npm run test:e2e 2>&1 | tee library-browser-diagnostic.txt
+          code=${PIPESTATUS[0]}
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Save browser diagnostic when failing
+        if: steps.browser.outputs.exit_code != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add library-browser-diagnostic.txt
+          git commit -m "Capture Library browser QA failure"
+          git push origin HEAD:library-search-v2
+          exit 1
       - name: Commit tested integration
+        if: steps.browser.outputs.exit_code == '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

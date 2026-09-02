@@ -1,0 +1,1074 @@
+
+> test:e2e
+> playwright test
+
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:14] "GET / HTTP/1.1" 200 -
+bolna.provider.retry {
+  operation: 'transcribe',
+  endpoint: 'https://generativelanguage.googleapis.com/v1beta/interactions',
+  model: 'gemini-3.5-flash-lite',
+  mimeType: 'audio/wav',
+  recordingBytesApprox: 3,
+  attempt: 1,
+  category: 'timeout',
+  elapsedMs: 5500
+}
+bolna.provider {
+  operation: 'transcribe',
+  endpoint: 'https://generativelanguage.googleapis.com/v1beta/interactions',
+  model: 'gemini-3.5-flash-lite',
+  mimeType: 'audio/wav',
+  recordingBytesApprox: 3,
+  status: 200,
+  elapsedMs: 5500,
+  attempt: 2,
+  category: 'ok'
+}
+Library data checks passed: 181 phrases across 12 categories
+TRANSCRIPTION_TIMEOUT_RETRY: PASS
+{
+  "phrases": 181,
+  "total": 138,
+  "top1": 127,
+  "top3": 135,
+  "top1Rate": 0.9202898550724637,
+  "top3Rate": 0.9782608695652174,
+  "failures": [
+    {
+      "q": "food not spicy",
+      "expected": "Please make it a little less spicy.",
+      "results": [
+        "Please do not feed her.",
+        "She has not eaten today.",
+        "This is not what we ordered."
+      ]
+    },
+    {
+      "q": "can dog come inside",
+      "expected": "Are dogs allowed inside?",
+      "results": [
+        "Where can I walk my dog?",
+        "Do I need to come back?",
+        "Can someone come today?"
+      ]
+    },
+    {
+      "q": "restroom closest",
+      "expected": "Is there a bathroom nearby?",
+      "results": [
+        "Which gate is closest?",
+        "Please close the door.",
+        "Please pack the rest."
+      ]
+    }
+  ]
+}
+production origin regression PASS
+voice context isolation PASS
+
+Running 104 tests using 2 workers
+
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /library-search.js HTTP/1.1" 200 -
+  ✘    1 [chromium-393] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used (302ms)
+  ✓    2 [chromium-393] › tests/library.spec.js:7:1 › library loads expanded static phrases with Hinglish and phonetics without Gemini (440ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓    3 [chromium-393] › tests/library.spec.js:18:1 › library search understands rough English intent and keeps reranking as query changes (343ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:16] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓    4 [chromium-393] › tests/library.spec.js:36:1 › library category filtering still works with intelligent search (331ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓    5 [chromium-393] › tests/bolna.spec.js:69:1 › transcription client always sends normalized WAV to secure backend (311ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓    6 [chromium-393] › tests/library.spec.js:45:1 › no strong match can be handed to Speak without calling Gemini during search (375ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:17] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+  ✘    8 [chromium-393] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases (370ms)
+  ✓    7 [chromium-393] › tests/bolna.spec.js:83:1 › five consecutive phrase cycles recover without refresh (972ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   10 [chromium-393] › tests/library.spec.js:67:1 › existing Speak flow remains available after visiting library (356ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:18] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   11 [chromium-393] › tests/microphone.spec.js:3:1 › reuses one live microphone stream during a page session (279ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   12 [chromium-393] › tests/persistent-cache.spec.js:3:1 › persists TTS audio across reload without another provider call (133ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   13 [chromium-393] › tests/reliability.spec.js:31:1 › empty generation returns to usable idle state (207ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓    9 [chromium-393] › tests/bolna.spec.js:101:1 › five consecutive Hear It plays and repeated Slow recover (1.6s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:19] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   15 [chromium-393] › tests/bolna.spec.js:116:1 › details keep pronunciation, meaning, polite, casual, More Hindi and breakdown (389ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   16 [chromium-393] › tests/bolna.spec.js:137:3 › recovers from 400 provider rejection (213ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   17 [chromium-393] › tests/bolna.spec.js:137:3 › recovers from 403 bad configuration (224ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:20] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   18 [chromium-393] › tests/bolna.spec.js:137:3 › recovers from 429 quota (224ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   19 [chromium-393] › tests/bolna.spec.js:137:3 › recovers from 500 provider outage (223ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   20 [chromium-393] › tests/bolna.spec.js:148:1 › diagnostics expose stage and latency metadata without secrets (230ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:21] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✘   21 [chromium-375] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used (209ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   22 [chromium-375] › tests/bolna.spec.js:69:1 › transcription client always sends normalized WAV to secure backend (221ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:22] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   23 [chromium-375] › tests/bolna.spec.js:83:1 › five consecutive phrase cycles recover without refresh (820ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:23] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:23] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:23] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:23] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:23] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:23] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   24 [chromium-375] › tests/bolna.spec.js:101:1 › five consecutive Hear It plays and repeated Slow recover (1.4s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   25 [chromium-375] › tests/bolna.spec.js:116:1 › details keep pronunciation, meaning, polite, casual, More Hindi and breakdown (388ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   26 [chromium-375] › tests/bolna.spec.js:137:3 › recovers from 400 provider rejection (227ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library.js HTTP/1.1" 200 -
+  ✓   27 [chromium-375] › tests/bolna.spec.js:137:3 › recovers from 403 bad configuration (207ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:25] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   28 [chromium-375] › tests/bolna.spec.js:137:3 › recovers from 429 quota (209ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+  ✓   29 [chromium-375] › tests/bolna.spec.js:137:3 › recovers from 500 provider outage (226ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+  ✓   30 [chromium-375] › tests/bolna.spec.js:148:1 › diagnostics expose stage and latency metadata without secrets (214ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+  ✓   31 [chromium-375] › tests/library.spec.js:7:1 › library loads expanded static phrases with Hinglish and phonetics without Gemini (202ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:26] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+  ✓   32 [chromium-375] › tests/library.spec.js:18:1 › library search understands rough English intent and keeps reranking as query changes (256ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   33 [chromium-375] › tests/library.spec.js:36:1 › library category filtering still works with intelligent search (207ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /style.css HTTP/1.1" 200 -
+  ✓   34 [chromium-375] › tests/library.spec.js:45:1 › no strong match can be handed to Speak without calling Gemini during search (219ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:27] "GET /phrase-library.js HTTP/1.1" 200 -
+  ✘   35 [chromium-375] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases (262ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   36 [chromium-375] › tests/library.spec.js:67:1 › existing Speak flow remains available after visiting library (322ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /style.css HTTP/1.1" 200 -
+  ✓   37 [chromium-375] › tests/microphone.spec.js:3:1 › reuses one live microphone stream during a page session (271ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   38 [chromium-375] › tests/persistent-cache.spec.js:3:1 › persists TTS audio across reload without another provider call (128ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:28] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   39 [chromium-375] › tests/reliability.spec.js:31:1 › empty generation returns to usable idle state (198ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:29] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:29] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:29] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:29] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:29] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:29] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   14 [chromium-393] › tests/reliability.spec.js:39:1 › client timeout returns to usable state (18.6s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   41 [chromium-393] › tests/reliability.spec.js:53:1 › empty transcript is classified and recoverable (163ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   42 [chromium-393] › tests/reliability.spec.js:64:1 › empty TTS is classified without breaking result screen (302ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   43 [chromium-393] › tests/reliability.spec.js:79:1 › invalid PCM is rejected cleanly (272ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:38] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   44 [chromium-393] › tests/reliability.spec.js:94:1 › decodeAudioData failure is a playback problem, not a frozen app (293ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   45 [chromium-393] › tests/reliability.spec.js:112:1 › suspended AudioContext is resumed before playback attempt (214ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:39] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   46 [chromium-393] › tests/reliability.spec.js:133:1 › backend error leaves UI retryable rather than stale (369ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:43] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:43] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:43] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:43] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:43] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:43] "GET /library-search.js HTTP/1.1" 200 -
+  ✘   47 [webkit-393] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used (3.1s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:44] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:44] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:44] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:44] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:44] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:44] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   48 [webkit-393] › tests/bolna.spec.js:69:1 › transcription client always sends normalized WAV to secure backend (596ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:45] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:45] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:45] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:45] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:45] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:45] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   49 [webkit-393] › tests/bolna.spec.js:83:1 › five consecutive phrase cycles recover without refresh (1.8s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:46] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:46] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:46] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:46] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:46] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:46] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   40 [chromium-375] › tests/reliability.spec.js:39:1 › client timeout returns to usable state (18.6s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   51 [chromium-375] › tests/reliability.spec.js:53:1 › empty transcript is classified and recoverable (163ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:47] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   52 [chromium-375] › tests/reliability.spec.js:64:1 › empty TTS is classified without breaking result screen (297ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   50 [webkit-393] › tests/bolna.spec.js:101:1 › five consecutive Hear It plays and repeated Slow recover (1.8s)
+  ✓   53 [chromium-375] › tests/reliability.spec.js:79:1 › invalid PCM is rejected cleanly (323ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:48] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   55 [chromium-375] › tests/reliability.spec.js:94:1 › decodeAudioData failure is a playback problem, not a frozen app (394ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   56 [chromium-375] › tests/reliability.spec.js:112:1 › suspended AudioContext is resumed before playback attempt (245ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   54 [webkit-393] › tests/bolna.spec.js:116:1 › details keep pronunciation, meaning, polite, casual, More Hindi and breakdown (892ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:49] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   57 [chromium-375] › tests/reliability.spec.js:133:1 › backend error leaves UI retryable rather than stale (448ms)
+  ✓   58 [webkit-393] › tests/bolna.spec.js:137:3 › recovers from 400 provider rejection (476ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   59 [webkit-393] › tests/bolna.spec.js:137:3 › recovers from 403 bad configuration (530ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:50] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   61 [webkit-393] › tests/bolna.spec.js:137:3 › recovers from 429 quota (584ms)
+  ✓   60 [webkit-393] › tests/library.spec.js:7:1 › library loads expanded static phrases with Hinglish and phonetics without Gemini (790ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   62 [webkit-393] › tests/bolna.spec.js:137:3 › recovers from 500 provider outage (580ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:51] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   63 [webkit-393] › tests/library.spec.js:18:1 › library search understands rough English intent and keeps reranking as query changes (799ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   64 [webkit-393] › tests/bolna.spec.js:148:1 › diagnostics expose stage and latency metadata without secrets (630ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   65 [webkit-393] › tests/library.spec.js:36:1 › library category filtering still works with intelligent search (658ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:52] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   66 [webkit-393] › tests/microphone.spec.js:3:1 › reuses one live microphone stream during a page session (587ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   67 [webkit-393] › tests/library.spec.js:45:1 › no strong match can be handed to Speak without calling Gemini during search (621ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   68 [webkit-393] › tests/persistent-cache.spec.js:3:1 › persists TTS audio across reload without another provider call (472ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:53] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   70 [webkit-393] › tests/reliability.spec.js:31:1 › empty generation returns to usable idle state (568ms)
+  ✘   69 [webkit-393] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases (700ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:54] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   72 [webkit-393] › tests/library.spec.js:67:1 › existing Speak flow remains available after visiting library (560ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:55] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:55] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:55] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:55] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:55] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:55] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✘   73 [webkit-375] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used (380ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   74 [webkit-375] › tests/bolna.spec.js:69:1 › transcription client always sends normalized WAV to secure backend (385ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:56] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   75 [webkit-375] › tests/bolna.spec.js:83:1 › five consecutive phrase cycles recover without refresh (1.0s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:57] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:57] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:57] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:57] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:57] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:57] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   76 [webkit-375] › tests/bolna.spec.js:101:1 › five consecutive Hear It plays and repeated Slow recover (1.8s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:59] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:59] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:59] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:59] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:59] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:00:59] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   77 [webkit-375] › tests/bolna.spec.js:116:1 › details keep pronunciation, meaning, polite, casual, More Hindi and breakdown (778ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   78 [webkit-375] › tests/bolna.spec.js:137:3 › recovers from 400 provider rejection (413ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:00] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   79 [webkit-375] › tests/bolna.spec.js:137:3 › recovers from 403 bad configuration (433ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   80 [webkit-375] › tests/bolna.spec.js:137:3 › recovers from 429 quota (401ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:01] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   81 [webkit-375] › tests/bolna.spec.js:137:3 › recovers from 500 provider outage (423ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   82 [webkit-375] › tests/bolna.spec.js:148:1 › diagnostics expose stage and latency metadata without secrets (454ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:02] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   83 [webkit-375] › tests/library.spec.js:7:1 › library loads expanded static phrases with Hinglish and phonetics without Gemini (447ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   84 [webkit-375] › tests/library.spec.js:18:1 › library search understands rough English intent and keeps reranking as query changes (553ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:03] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   85 [webkit-375] › tests/library.spec.js:36:1 › library category filtering still works with intelligent search (441ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   86 [webkit-375] › tests/library.spec.js:45:1 › no strong match can be handed to Speak without calling Gemini during search (506ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:04] "GET /library-search.js HTTP/1.1" 200 -
+  ✘   87 [webkit-375] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases (504ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:05] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:05] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:05] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:05] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:05] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:05] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   88 [webkit-375] › tests/library.spec.js:67:1 › existing Speak flow remains available after visiting library (543ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+  ✓   89 [webkit-375] › tests/microphone.spec.js:3:1 › reuses one live microphone stream during a page session (467ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   90 [webkit-375] › tests/persistent-cache.spec.js:3:1 › persists TTS audio across reload without another provider call (336ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:06] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   91 [webkit-375] › tests/reliability.spec.js:31:1 › empty generation returns to usable idle state (414ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:07] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   71 [webkit-393] › tests/reliability.spec.js:39:1 › client timeout returns to usable state (18.5s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   93 [webkit-393] › tests/reliability.spec.js:53:1 › empty transcript is classified and recoverable (323ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:12] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   94 [webkit-393] › tests/reliability.spec.js:64:1 › empty TTS is classified without breaking result screen (529ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   95 [webkit-393] › tests/reliability.spec.js:79:1 › invalid PCM is rejected cleanly (553ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:13] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓   96 [webkit-393] › tests/reliability.spec.js:94:1 › decodeAudioData failure is a playback problem, not a frozen app (522ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:14] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:14] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:14] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:14] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:14] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:14] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   97 [webkit-393] › tests/reliability.spec.js:112:1 › suspended AudioContext is resumed before playback attempt (556ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:15] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:15] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:15] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:15] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:15] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:15] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   98 [webkit-393] › tests/reliability.spec.js:133:1 › backend error leaves UI retryable rather than stale (592ms)
+  ✓   92 [webkit-375] › tests/reliability.spec.js:39:1 › client timeout returns to usable state (18.8s)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /app-runtime.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /library-search.js HTTP/1.1" 200 -
+  ✓   99 [webkit-375] › tests/reliability.spec.js:53:1 › empty transcript is classified and recoverable (348ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:26] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓  100 [webkit-375] › tests/reliability.spec.js:64:1 › empty TTS is classified without breaking result screen (575ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓  101 [webkit-375] › tests/reliability.spec.js:79:1 › invalid PCM is rejected cleanly (544ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:27] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓  102 [webkit-375] › tests/reliability.spec.js:94:1 › decodeAudioData failure is a playback problem, not a frozen app (533ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓  103 [webkit-375] › tests/reliability.spec.js:112:1 › suspended AudioContext is resumed before playback attempt (544ms)
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET / HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /style.css HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /phrase-library.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /phrase-library-expanded.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /library-search.js HTTP/1.1" 200 -
+[WebServer] 127.0.0.1 - - [02/Sep/2026 23:01:28] "GET /app-runtime.js HTTP/1.1" 200 -
+  ✓  104 [webkit-375] › tests/reliability.spec.js:133:1 › backend error leaves UI retryable rather than stale (618ms)
+
+
+  1) [chromium-393] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 1
+
+      Array [
+        "./phrase-library.js",
+    +   "./phrase-library-expanded.js",
+      ]
+
+      63 |   expect(ownership.diagnostics).toBe('single-v1');
+      64 |   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
+    > 65 |   expect(ownership.dataScripts).toEqual(['./phrase-library.js']);
+         |                                 ^
+      66 |   expect(ownership.geminiKey).toBeNull();
+      67 | });
+      68 |
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/bolna.spec.js:65:33
+
+    Error Context: test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-chromium-393/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-chromium-393/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-chromium-393/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium-393] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: /Your haircut looks great/ }) resolved to 2 elements:
+        1) <button data-library-open="70" class="phraseLibraryMain">…</button> aka getByRole('button', { name: 'Friends & everyday · Friend Your haircut looks great. bhai, HAIR-cut must hai' })
+        2) <button class="roundPlay" data-library-play="70" aria-label="Play Your haircut looks great.">▶</button> aka getByRole('button', { name: 'Play Your haircut looks great.' })
+
+    Call log:
+      - waiting for getByRole('button', { name: /Your haircut looks great/ })
+
+
+      57 |   await page.getByRole('button', { name: 'Library' }).click();
+      58 |   const haircut = page.getByRole('button', { name: /Your haircut looks great/ });
+    > 59 |   await haircut.click();
+         |                 ^
+      60 |   await expect(page.getByRole('heading', { name: 'Bhai, haircut mast hai!' })).toBeVisible();
+      61 |   await expect(page.getByText('bhai, HAIR-cut must hai')).toBeVisible();
+      62 |   await page.getByRole('button', { name: /Save/ }).click();
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/library.spec.js:59:17
+
+    Error Context: test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-chromium-393/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-chromium-393/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-chromium-393/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium-375] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 1
+
+      Array [
+        "./phrase-library.js",
+    +   "./phrase-library-expanded.js",
+      ]
+
+      63 |   expect(ownership.diagnostics).toBe('single-v1');
+      64 |   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
+    > 65 |   expect(ownership.dataScripts).toEqual(['./phrase-library.js']);
+         |                                 ^
+      66 |   expect(ownership.geminiKey).toBeNull();
+      67 | });
+      68 |
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/bolna.spec.js:65:33
+
+    Error Context: test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-chromium-375/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-chromium-375/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-chromium-375/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium-375] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: /Your haircut looks great/ }) resolved to 2 elements:
+        1) <button data-library-open="70" class="phraseLibraryMain">…</button> aka getByRole('button', { name: 'Friends & everyday · Friend Your haircut looks great. bhai, HAIR-cut must hai' })
+        2) <button class="roundPlay" data-library-play="70" aria-label="Play Your haircut looks great.">▶</button> aka getByRole('button', { name: 'Play Your haircut looks great.' })
+
+    Call log:
+      - waiting for getByRole('button', { name: /Your haircut looks great/ })
+
+
+      57 |   await page.getByRole('button', { name: 'Library' }).click();
+      58 |   const haircut = page.getByRole('button', { name: /Your haircut looks great/ });
+    > 59 |   await haircut.click();
+         |                 ^
+      60 |   await expect(page.getByRole('heading', { name: 'Bhai, haircut mast hai!' })).toBeVisible();
+      61 |   await expect(page.getByText('bhai, HAIR-cut must hai')).toBeVisible();
+      62 |   await page.getByRole('button', { name: /Save/ }).click();
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/library.spec.js:59:17
+
+    Error Context: test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-chromium-375/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-chromium-375/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-chromium-375/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [webkit-393] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 1
+
+      Array [
+        "./phrase-library.js",
+    +   "./phrase-library-expanded.js",
+      ]
+
+      63 |   expect(ownership.diagnostics).toBe('single-v1');
+      64 |   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
+    > 65 |   expect(ownership.dataScripts).toEqual(['./phrase-library.js']);
+         |                                 ^
+      66 |   expect(ownership.geminiKey).toBeNull();
+      67 | });
+      68 |
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/bolna.spec.js:65:33
+
+    Error Context: test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-webkit-393/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-webkit-393/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-webkit-393/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [webkit-393] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: /Your haircut looks great/ }) resolved to 2 elements:
+        1) <button data-library-open="70" class="phraseLibraryMain">…</button> aka getByRole('button', { name: 'Friends & everyday · Friend Your haircut looks great. bhai, HAIR-cut must hai' })
+        2) <button class="roundPlay" data-library-play="70" aria-label="Play Your haircut looks great.">▶</button> aka getByRole('button', { name: 'Play Your haircut looks great.' })
+
+    Call log:
+      - waiting for getByRole('button', { name: /Your haircut looks great/ })
+
+
+      57 |   await page.getByRole('button', { name: 'Library' }).click();
+      58 |   const haircut = page.getByRole('button', { name: /Your haircut looks great/ });
+    > 59 |   await haircut.click();
+         |                 ^
+      60 |   await expect(page.getByRole('heading', { name: 'Bhai, haircut mast hai!' })).toBeVisible();
+      61 |   await expect(page.getByText('bhai, HAIR-cut must hai')).toBeVisible();
+      62 |   await page.getByRole('button', { name: /Save/ }).click();
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/library.spec.js:59:17
+
+    Error Context: test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-webkit-393/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-webkit-393/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-webkit-393/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [webkit-375] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 1
+
+      Array [
+        "./phrase-library.js",
+    +   "./phrase-library-expanded.js",
+      ]
+
+      63 |   expect(ownership.diagnostics).toBe('single-v1');
+      64 |   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
+    > 65 |   expect(ownership.dataScripts).toEqual(['./phrase-library.js']);
+         |                                 ^
+      66 |   expect(ownership.geminiKey).toBeNull();
+      67 | });
+      68 |
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/bolna.spec.js:65:33
+
+    Error Context: test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-webkit-375/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-webkit-375/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/bolna-only-one-authoritati-3b19f--browser-Gemini-key-is-used-webkit-375/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [webkit-375] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: /Your haircut looks great/ }) resolved to 2 elements:
+        1) <button data-library-open="70" class="phraseLibraryMain">…</button> aka getByRole('button', { name: 'Friends & everyday · Friend Your haircut looks great. bhai, HAIR-cut must hai' })
+        2) <button class="roundPlay" data-library-play="70" aria-label="Play Your haircut looks great.">▶</button> aka getByRole('button', { name: 'Play Your haircut looks great.' })
+
+    Call log:
+      - waiting for getByRole('button', { name: /Your haircut looks great/ })
+
+
+      57 |   await page.getByRole('button', { name: 'Library' }).click();
+      58 |   const haircut = page.getByRole('button', { name: /Your haircut looks great/ });
+    > 59 |   await haircut.click();
+         |                 ^
+      60 |   await expect(page.getByRole('heading', { name: 'Bhai, haircut mast hai!' })).toBeVisible();
+      61 |   await expect(page.getByText('bhai, HAIR-cut must hai')).toBeVisible();
+      62 |   await page.getByRole('button', { name: /Save/ }).click();
+        at /home/runner/work/bolna-hinglish/bolna-hinglish/tests/library.spec.js:59:17
+
+    Error Context: test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-webkit-375/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-webkit-375/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/library-opening-a-library--6cab2--and-can-save-to-My-Phrases-webkit-375/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8 failed
+    [chromium-393] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+    [chromium-393] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+    [chromium-375] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+    [chromium-375] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+    [webkit-393] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+    [webkit-393] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+    [webkit-375] › tests/bolna.spec.js:53:1 › only one authoritative runtime is loaded and no browser Gemini key is used 
+    [webkit-375] › tests/library.spec.js:56:1 › opening a library phrase shows phonetics and can save to My Phrases 
+  96 passed (1.3m)

@@ -12,34 +12,40 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: rescue-single-runtime
-          fetch-depth: 1
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Restore last known-good combined voice flow only
+      - name: Restore exact single-fix voice runtime and verify
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('app-runtime.js')
-          s=p.read_text()
-          old="try{state='transcribing';render();transcript=await transcribe(b);if(id!==reqId)return;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}state='generating';render();const d=await generateCore(transcript);if(id!==reqId)return;result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)}"
-          new="try{state='transcribing';render();const d=await voiceCore(b);if(id!==reqId)return;transcript=d.transcript;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};delete result.transcript;result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)}"
-          if s.count(old)!=1:
-              raise SystemExit(f'two-stage target count {s.count(old)}')
-          s=s.replace(old,new)
-          p.write_text(s)
-          t=Path('tests/known-good-voice-restore.test.js')
-          t.write_text("""const fs=require('fs');\nconst s=fs.readFileSync('app-runtime.js','utf8');\nconst a=s.indexOf('function voiceCorePrompt()');\nconst b=s.indexOf('function corePrompt',a);\nif(a<0||b<0)throw new Error('voiceCorePrompt missing');\nconst prompt=s.slice(a,b);\nif(prompt.includes('JSON.stringify(context)'))throw new Error('context leaked back into voice prompt');\nconst c=s.indexOf('async function startListening()');\nconst d=s.indexOf('async function submitTyped()',c);\nif(c<0||d<0)throw new Error('startListening missing');\nconst flow=s.slice(c,d);\nif(!flow.includes('const d=await voiceCore(b)'))throw new Error('known-good voiceCore flow not restored');\nif(flow.includes('transcript=await transcribe(b)'))throw new Error('two-stage transcription still active');\nconst ready=flow.indexOf("state='ready';remember();render();");\nconst tts=flow.indexOf('void prefetchVoice(result.speechText)');\nif(!(ready>=0&&tts>ready))throw new Error('result must render before audio prefetch');\nif(!s.includes('<p class=\\"phonetic\\">${esc(result.phonetic)}</p>'))throw new Error('phonetic display missing');\nconsole.log('known-good voice restore PASS');\n""")
-          PY
+          GOOD=a493ad580beef81afd4790bda85828a44ce80b66
+          git show "$GOOD:app-runtime.js" > app-runtime.js
+          git diff --exit-code "$GOOD" -- app-runtime.js
           node --check app-runtime.js
-          node tests/known-good-voice-restore.test.js
-          node tests/voice-context-isolation.test.js
-          git diff --check
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('app-runtime.js','utf8');
+          const a=s.indexOf('function voiceCorePrompt()');
+          const b=s.indexOf('function corePrompt',a);
+          const prompt=s.slice(a,b);
+          if(a<0||b<0)throw new Error('voiceCorePrompt missing');
+          if(prompt.includes('JSON.stringify(context)'))throw new Error('context present in voice prompt');
+          const c=s.indexOf('async function startListening()');
+          const d=s.indexOf('async function submitTyped()',c);
+          const flow=s.slice(c,d);
+          if(!flow.includes('const d=await voiceCore(b)'))throw new Error('combined known-good voice flow missing');
+          if(flow.includes('transcript=await transcribe(b)'))throw new Error('two-stage flow still active');
+          const ready=flow.indexOf("state='ready';remember();render();");
+          const tts=flow.indexOf('void prefetchVoice(result.speechText)');
+          if(!(ready>=0&&tts>ready))throw new Error('result must render before audio prefetch');
+          if(!s.includes('<p class="phonetic">${esc(result.phonetic)}</p>'))throw new Error('phonetic display missing');
+          console.log('forensic runtime verification PASS');
+          NODE
           npm install
           npx playwright install --with-deps chromium webkit
           npm run test:e2e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app-runtime.js tests/known-good-voice-restore.test.js
-          git commit -m "Restore known-good voice generation flow"
+          git add app-runtime.js
+          git commit -m "Restore exact single-fix voice runtime"
           git push origin HEAD:rescue-single-runtime

@@ -25,6 +25,7 @@ jobs:
           node --check app-runtime.js
           node --check library-search.js
           node --check phrase-library-expanded.js
+          node --check tests/library-search-expat-messy.test.js
       - name: Verify production voice runtime untouched
         run: |
           git show d4e7016ab6c32bab28eff0de874568b542aec2e1:app-runtime.js > /tmp/prod-runtime.js
@@ -33,6 +34,7 @@ jobs:
         run: |
           node tests/library-data.test.js
           node tests/library-search-intelligence.test.js
+          node tests/library-search-expat-messy.test.js
           node tests/voice-context-isolation.test.js
       - name: Browser regression suite
         run: |

@@ -18,6 +18,7 @@
     ['bill','check'],
     ['food','meal','dish','restaurant'],
     ['spicy','chili','chilli','hot','mild'],
+    ['salt','salty'],
     ['not','no','without','less'],
     ['water','tap'],
     ['bathroom','toilet','washroom','restroom'],
@@ -27,12 +28,12 @@
     ['traffic','jam'],
     ['home','house','apartment','flat'],
     ['garbage','trash','rubbish','waste'],
-    ['electricity','power','light'],
-    ['internet','wifi','wi fi'],
+    ['electricity','power','light','current','bijli'],
+    ['internet','wifi','wi fi','broadband'],
     ['money','cash','payment','pay'],
     ['change','coins','small notes'],
     ['vegetables','veggies','produce'],
-    ['grocery','groceries','supermarket'],
+    ['grocery','groceries','supermarket','kirana','ration shop'],
     ['walking','walk','on foot'],
     ['late','delay','delayed'],
     ['upstairs','up'],
@@ -54,7 +55,7 @@
     ['morning','am'],
     ['evening','night','pm']
   ];
-  const stopWords=new Set(['a','an','the','i','you','we','they','he','she','it','can','could','would','should','do','does','did','is','are','am','be','to','for','of','my','your']);
+  const stopWords=new Set(['a','an','the','i','you','we','they','he','she','it','can','could','would','should','do','does','did','is','are','am','be','to','for','of','my','your','again']);
   const aliasMap=new Map();
   for(const group of aliasGroups){
     const words=group.map(normalize);

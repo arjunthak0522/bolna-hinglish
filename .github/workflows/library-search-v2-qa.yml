@@ -1,0 +1,72 @@
+name: Library Search V2 QA
+on:
+  push:
+    branches: ["library-search-v2"]
+    paths: [".library-search-v2-trigger"]
+permissions:
+  contents: write
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: library-search-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Patch Library integration only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('phrase-library-expanded.js')
+          s=p.read_text()
+          duplicate="{category:'Errands & local life',context:'Shopkeeper',english:'Where is the nearest grocery store?',natural:'Nearest grocery store kahan hai?',phonetic:'nearest grocery store ku-HAAN hai',search:'supermarket grocery nearby closest directions'},\n"
+          s=s.replace(duplicate,'')
+          p.write_text(s)
+
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          start=s.index('function renderLibrary(){')
+          end=s.index('function renderPhrases(){',start)
+          new=r'''function renderLibrary(){const cats=['All',...new Set(phraseLibrary.map(x=>x.category))],q=librarySearch.trim(),engine=window.BOLNA_LIBRARY_SEARCH,ranked=engine?engine.rank(phraseLibrary,q,libraryCategory):phraseLibrary.filter(x=>(libraryCategory==='All'||x.category===libraryCategory)&&(!q||`${x.english} ${x.category}`.toLowerCase().includes(q.toLowerCase()))).map((item,index)=>({item,index,score:1})),rows=(q?ranked.slice(0,12):ranked).map(x=>x.item);app.className='app libraryView phraseLibraryView';app.innerHTML=`<header><div class="brand">bolna</div></header><h1 class="pageTitle">India Phrase Library</h1><p class="pageSub">Type the idea in English. Bolna will find the phrase you probably mean.</p><div class="libraryTools"><input id="librarySearch" value="${esc(librarySearch)}" placeholder="Search in English…" autocomplete="off" autocapitalize="sentences"><select id="libraryCategory">${cats.map(c=>`<option ${c===libraryCategory?'selected':''}>${esc(c)}</option>`).join('')}</select></div>${q&&rows.length?`<p class="libraryCount">Best matches for “${esc(q)}”</p>`:`<p class="libraryCount">${rows.length} phrase${rows.length===1?'':'s'}</p>`}<section class="phraseLibraryList">${rows.length?rows.map(x=>`<article class="phraseLibraryCard"><button class="phraseLibraryMain" data-library-open="${phraseLibrary.indexOf(x)}"><small>${esc(x.category)} · ${esc(x.context)}</small><strong>${esc(x.english)}</strong><em>${esc(x.phonetic)}</em><span>${esc(x.natural)}</span></button><button class="roundPlay" data-library-play="${phraseLibrary.indexOf(x)}" aria-label="Play ${esc(x.english)}">▶</button></article>`).join(''):`<div><p class="empty">No strong Library match yet. Keep typing, or ask Bolna using these English words.</p><button class="typeToggle" id="libraryAsk">Ask Bolna with this</button></div>`}</section>${nav()}`;document.getElementById('librarySearch').oninput=e=>{librarySearch=e.target.value;renderLibrary();const el=document.getElementById('librarySearch');el.focus();el.setSelectionRange(el.value.length,el.value.length)};document.getElementById('libraryCategory').onchange=e=>{libraryCategory=e.target.value;renderLibrary()};document.getElementById('libraryAsk')?.addEventListener('click',()=>{const seed=librarySearch;view='speak';showType=true;state='idle';result=null;error=null;render();const t=document.getElementById('typed');if(t){t.value=seed;t.focus()}});document.querySelectorAll('[data-library-open]').forEach(b=>b.onclick=()=>openLibraryPhrase(phraseLibrary[+b.dataset.libraryOpen]));document.querySelectorAll('[data-library-play]').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=phraseLibrary[+b.dataset.libraryPlay];playText(x.natural,false)});bindNav()}
+'''
+          p.write_text(s[:start]+new+s[end:])
+          PY
+          node --check app-runtime.js
+          node --check library-search.js
+          node --check phrase-library-expanded.js
+      - name: Verify production voice runtime untouched
+        run: |
+          git show d4e7016ab6c32bab28eff0de874568b542aec2e1:app-runtime.js > /tmp/prod-runtime.js
+          node - <<'NODE'
+          const fs=require('fs');
+          const prod=fs.readFileSync('/tmp/prod-runtime.js','utf8');
+          const cur=fs.readFileSync('app-runtime.js','utf8');
+          function withoutLibrary(s){const a=s.indexOf('function renderLibrary(){'),b=s.indexOf('function renderPhrases(){',a);if(a<0||b<0)throw new Error('renderLibrary boundaries missing');return s.slice(0,a)+s.slice(b)}
+          if(withoutLibrary(prod)!==withoutLibrary(cur))throw new Error('app-runtime changed outside renderLibrary');
+          const vp=cur.slice(cur.indexOf('function voiceCorePrompt()'),cur.indexOf('function corePrompt'));
+          if(vp.includes('JSON.stringify(context)'))throw new Error('context returned to voice prompt');
+          const flow=cur.slice(cur.indexOf('async function startListening()'),cur.indexOf('async function submitTyped()'));
+          if(!flow.includes('const d=await voiceCore(b)'))throw new Error('production voice flow changed');
+          console.log('production voice/runtime safety PASS');
+          NODE
+      - name: Run Library data and search benchmarks
+        run: |
+          node tests/library-data.test.js
+          node tests/library-search-intelligence.test.js
+          node tests/voice-context-isolation.test.js
+      - name: Run browser regression suite
+        run: |
+          npm install
+          npx playwright install --with-deps chromium webkit
+          npm run test:e2e
+      - name: Commit tested batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app-runtime.js phrase-library-expanded.js
+          git diff --cached --check
+          git commit -m "Integrate intelligent English Library search"
+          git push origin HEAD:library-search-v2

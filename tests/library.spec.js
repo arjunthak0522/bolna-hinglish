@@ -55,7 +55,7 @@ test('no strong match can be handed to Speak without calling Gemini during searc
 
 test('opening a library phrase shows phonetics and can save to My Phrases', async ({ page }) => {
   await page.getByRole('button', { name: 'Library' }).click();
-  const haircut = page.getByRole('button', { name: /Your haircut looks great/ });
+  const haircut = page.locator('[data-library-open]').filter({ hasText: 'Your haircut looks great.' });
   await haircut.click();
   await expect(page.getByRole('heading', { name: 'Bhai, haircut mast hai!' })).toBeVisible();
   await expect(page.getByText('bhai, HAIR-cut must hai')).toBeVisible();

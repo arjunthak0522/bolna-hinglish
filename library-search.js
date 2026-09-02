@@ -17,7 +17,7 @@
     ['delivery','package','parcel','courier'],
     ['bill','check'],
     ['food','meal','dish','restaurant'],
-    ['spicy','chili','chilli','hot'],
+    ['spicy','chili','chilli','hot','mild'],
     ['not','no','without','less'],
     ['water','tap'],
     ['bathroom','toilet','washroom','restroom'],

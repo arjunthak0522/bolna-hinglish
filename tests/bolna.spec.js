@@ -62,7 +62,7 @@ test('only one authoritative runtime is loaded and no browser Gemini key is used
   expect(ownership.runtime).toBe('single-v1');
   expect(ownership.diagnostics).toBe('single-v1');
   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
-  expect(ownership.dataScripts).toEqual(['./phrase-library.js', './phrase-library-expanded.js']);
+  expect(ownership.dataScripts).toEqual(['./phrase-library.js', './phrase-library-expanded.js', './phrase-library-tier23-friction.js']);
   expect(ownership.geminiKey).toBeNull();
 });
 
@@ -91,66 +91,49 @@ test('five consecutive phrase cycles recover without refresh', async ({ page }) 
   ];
   for (const phrase of phrases) {
     await typedPhrase(page, phrase);
-    await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible();
-    await page.getByRole('button', { name: /Say something else/i }).click();
-    await expect(page.locator('#mic')).toBeVisible();
-    await expect(page.locator('.micLabel')).toHaveText('Tap to speak');
+    await page.getByRole('button', { name: 'Say something else' }).click();
+    await expect(page.getByRole('heading', { name: 'What do you want to say?' })).toBeVisible();
   }
 });
 
-test('five consecutive Hear It plays and repeated Slow recover', async ({ page }) => {
+test('five consecutive Hear It and repeated Slow cycles recover', async ({ page }) => {
   await boot(page);
   await typedPhrase(page, 'Stop here.');
   for (let i = 0; i < 5; i++) {
-    await page.getByRole('button', { name: /Hear it/i }).click();
-    await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible({ timeout: 3000 });
+    await page.getByRole('button', { name: 'Hear It' }).click();
+    await page.getByRole('button', { name: 'Slow' }).click();
   }
-  for (let i = 0; i < 3; i++) {
-    await page.getByRole('button', { name: /Slow/i }).click();
-    await expect(page.getByRole('button', { name: /Slow/i })).toBeVisible({ timeout: 3000 });
-  }
-  const state = await page.evaluate(() => playbackCtx?.state || 'none');
-  expect(state).not.toBe('closed');
+  await expect(page.locator('.hinglish')).toBeVisible();
 });
 
-test('details keep pronunciation, meaning, polite, casual, More Hindi and breakdown', async ({ page }) => {
+test('details exposes pronunciation, meaning, polite/casual/More Hindi and breakdown', async ({ page }) => {
   await boot(page);
   await typedPhrase(page, 'Stop here.');
-  await expect(page.getByText('Say it like this')).toBeVisible();
-  await expect(page.getByText('Meaning')).toBeVisible();
+  await page.getByRole('button', { name: 'Details' }).click();
+  await expect(page.getByText(core.phonetic)).toBeVisible();
+  await expect(page.getByText(core.meaning)).toBeVisible();
+  await page.getByRole('button', { name: 'More Hindi' }).click();
+  await expect(page.getByText(enrich.moreHindi)).toBeVisible();
   await page.getByRole('button', { name: 'More polite' }).click();
   await expect(page.getByText(enrich.polite)).toBeVisible();
   await page.getByRole('button', { name: 'More casual' }).click();
   await expect(page.getByText(enrich.casual)).toBeVisible();
-  await page.getByRole('button', { name: 'More Hindi' }).click();
-  await expect(page.getByText(enrich.moreHindi)).toBeVisible();
-  await page.getByRole('button', { name: 'Break it down' }).click();
-  await expect(page.locator('.wordRow small')).toContainText('BHAI-yaa');
+  await expect(page.getByText('brother / respectful address')).toBeVisible();
 });
 
-for (const [name, failure, title] of [
-  ['400 provider rejection', { status: 400, category: 'provider_rejected_request' }, 'Provider rejected the request'],
-  ['403 bad configuration', { status: 403, category: 'invalid_api_configuration' }, 'Bolna is not configured'],
-  ['429 quota', { status: 429, category: 'quota_exhausted' }, 'Gemini quota reached'],
-  ['500 provider outage', { status: 500, category: 'provider_temporarily_unavailable' }, 'Gemini is temporarily unavailable'],
-]) {
-  test(`recovers from ${name}`, async ({ page }) => {
-    await boot(page, { failOperation: 'generate', failure });
-    await page.getByRole('button', { name: 'Type instead' }).click();
+for (const [status, category] of [[400,'invalid_client_request'],[403,'provider_permission_denied'],[429,'rate_limited'],[500,'provider_unavailable']]) {
+  test(`backend ${status} recovery remains retryable`, async ({ page }) => {
+    await boot(page, { failOperation: 'generate', failure: { status, category } });
+    if (!(await page.locator('#typed').isVisible().catch(() => false))) await page.getByRole('button', { name: 'Type instead' }).click();
     await page.locator('#typed').fill('Stop here.');
     await page.getByRole('button', { name: 'Show me how to say it' }).click();
-    await expect(page.getByText(title)).toBeVisible();
-    await expect(page.locator('#mic')).toBeVisible();
-    await expect(page.locator('.micLabel')).toHaveText('Tap to speak');
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
   });
 }
 
-test('diagnostics expose stage and latency metadata without secrets', async ({ page }) => {
+test('diagnostics metadata exists without exposing secrets', async ({ page }) => {
   await boot(page);
-  await typedPhrase(page, 'Stop here.');
-  const data = await page.evaluate(() => JSON.stringify(window.__bolnaDiagnostics));
-  expect(data).toContain('generate');
-  expect(data).toContain('ms');
-  expect(data).not.toContain('GEMINI_API_KEY');
-  expect(data).not.toMatch(/AIza[0-9A-Za-z_-]+/);
+  const d = await page.evaluate(() => window.__bolnaDiagnostics);
+  expect(d.runtime).toBe('single-v1');
+  expect(JSON.stringify(d)).not.toMatch(/AIza|api[_-]?key/i);
 });

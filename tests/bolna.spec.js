@@ -62,7 +62,7 @@ test('only one authoritative runtime is loaded and no browser Gemini key is used
   expect(ownership.runtime).toBe('single-v1');
   expect(ownership.diagnostics).toBe('single-v1');
   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
-  expect(ownership.dataScripts).toEqual(['./phrase-library.js', './phrase-library-expanded.js', './phrase-library-tier23-friction.js']);
+  expect(ownership.dataScripts).toEqual(['./phrase-library.js', './phrase-library-expanded.js', './phrase-library-tier23-friction.js', './phrase-library-survival.js']);
   expect(ownership.geminiKey).toBeNull();
 });
 

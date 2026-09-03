@@ -26,9 +26,11 @@ jobs:
           node --check library-search.js
           node --check phrase-library-expanded.js
           node --check phrase-library-tier23-friction.js
+          node --check phrase-library-survival.js
           node --check tests/library-search-expat-messy.test.js
           node --check tests/library-search-tier23-expat.test.js
           node --check tests/library-search-tier23-friction.test.js
+          node --check tests/library-search-survival.test.js
       - name: Verify production voice runtime untouched
         run: |
           git show d4e7016ab6c32bab28eff0de874568b542aec2e1:app-runtime.js > /tmp/prod-runtime.js
@@ -40,13 +42,14 @@ jobs:
           node tests/library-search-expat-messy.test.js
           node tests/library-search-tier23-expat.test.js
           node tests/library-search-tier23-friction.test.js
+          node tests/library-search-survival.test.js
           node tests/voice-context-isolation.test.js
       - name: Diagnose no-match query
         run: |
           node - <<'NODE'
           const fs=require('fs'),vm=require('vm');
           global.window={};
-          for(const f of ['phrase-library.js','phrase-library-expanded.js','phrase-library-tier23-friction.js']) vm.runInThisContext(fs.readFileSync(f,'utf8'));
+          for(const f of ['phrase-library.js','phrase-library-expanded.js','phrase-library-tier23-friction.js','phrase-library-survival.js']) vm.runInThisContext(fs.readFileSync(f,'utf8'));
           const search=require('./library-search.js');
           const rows=search.rank(window.BOLNA_PHRASE_LIBRARY,'purple submarine umbrella','All').slice(0,10).map(x=>({score:x.score,english:x.item.english,search:x.item.search||''}));
           console.log(JSON.stringify(rows,null,2));

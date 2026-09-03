@@ -1,0 +1,80 @@
+const fs=require('fs');
+const vm=require('vm');
+global.window={};
+for(const f of ['phrase-library.js','phrase-library-expanded.js','phrase-library-tier23-friction.js','phrase-library-survival.js'])vm.runInThisContext(fs.readFileSync(f,'utf8'));
+const search=require('../library-search.js');
+const lib=window.BOLNA_PHRASE_LIBRARY;
+const cases=[
+['still not fixed','It is still not fixed.'],
+['came yesterday still broken','Someone came yesterday but it is still broken.'],
+['send someone else','Please send someone else.'],
+['what time technician come','What time will the technician come?'],
+['come after 5 pm','Please come after 5 PM.'],
+['do not come tomorrow','Please do not come tomorrow.'],
+['check leak again','Please check the leak again.'],
+['water pressure very low','The water pressure is very low.'],
+['no hot water','There is no hot water.'],
+['geyser not working','The geyser is not working.'],
+['internet keeps disconnecting','The internet keeps disconnecting.'],
+['wifi very slow','The Wi-Fi is very slow.'],
+['electricity keeps going out','The power keeps going out.'],
+['elevator stuck','The elevator is stuck.'],
+['maintenance office closed','The maintenance office is closed.'],
+['when maintenance office open','When is the maintenance office open?'],
+['housekeeper come later today','Please come later today.'],
+['housekeeper tomorrow instead','Please come tomorrow instead.'],
+['clean this again','Please clean this again.'],
+['change bedsheets','Please change the bedsheets.'],
+['take trash out','Please take the trash out.'],
+['dont use this cleaner','Please do not use this cleaner.'],
+['leave key with security','Please leave the key with security.'],
+['let my guest in','Please let my guest in.'],
+['guest coming ten minutes','My guest is coming in ten minutes.'],
+['call me when guest arrives','Please call me when my guest arrives.'],
+['visitor parking','Where is visitor parking?'],
+['car blocking my parking spot','This car is blocking my parking spot.'],
+['ask them move car','Please ask them to move the car.'],
+['driver wait here ten minutes','Please wait here for ten minutes.'],
+['driver i will be ten minutes late','I will be ten minutes late.'],
+['driver stop here','Please stop here.'],
+['driver dont need wait','You do not need to wait.'],
+['driver come back 6 pm','Please come back at 6 PM.'],
+['driver use other entrance','Use the other entrance.'],
+['send car number','Please send me the car number.'],
+['another size','Do you have another size?'],
+['another color','Do you have another color?'],
+['item damaged','This is damaged.'],
+['can i return this','Can I return this?'],
+['can i exchange this','Can I exchange this?'],
+['when more stock','When will you get more stock?'],
+['deliver this today','Can you deliver this today?'],
+['only need one','I only need one.'],
+['do you accept upi','Do you accept UPI?'],
+['pharmacy doesnt have medicine','The pharmacy does not have this medicine.'],
+['call another pharmacy','Can you call another pharmacy?'],
+['medicine how many times a day','How many times a day should I take this?'],
+['medicine with food','Should I take this with food?'],
+['medicine empty stomach','Should I take this on an empty stomach?'],
+['blood test need fasting','Do I need to fast for this test?'],
+['when test results ready','When will the test results be ready?'],
+['make it less spicy','Please make it less spicy.'],
+['use less oil','Please use less oil.'],
+['no sugar please','No sugar, please.'],
+['pack this separately','Please pack this separately.'],
+['something missing from order','Something is missing from my order.'],
+['not what i ordered','This is not what I ordered.'],
+['make this fresh','Can you make this fresh?'],
+['what documents need','What documents do I need?'],
+['where do i sign','Where do I sign?'],
+['how long will this take','How long will this take?'],
+['did not understand that part','I did not understand that part.'],
+['say number again','Please say the number again.'],
+['write it down for me','Please write it down for me.'],
+['send it on whatsapp','Please send it to me on WhatsApp.']
+];
+let top1=0,top3=0;const failures=[];
+for(const [q,expected] of cases){const results=search.rank(lib,q,'All').slice(0,3).map(x=>x.item.english);if(results[0]===expected)top1++;if(results.includes(expected))top3++;else failures.push({q,expected,results});}
+const total=cases.length,top1Rate=top1/total,top3Rate=top3/total;
+console.log(JSON.stringify({benchmark:'expat-survival-conversation-chains',librarySize:lib.length,total,top1,top3,top1Rate,top3Rate,failures},null,2));
+if(lib.length<303)throw new Error(`Expected survival library >=303 phrases, got ${lib.length}`);
+if(top3Rate<0.90)throw new Error(`Survival Top-3 accuracy ${(top3Rate*100).toFixed(1)}% is below 90%`);

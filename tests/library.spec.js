@@ -66,7 +66,7 @@ test('opening a library phrase shows phonetics and can save to My Phrases', asyn
 
 test('existing Speak flow remains available after visiting library', async ({ page }) => {
   await page.getByRole('button', { name: 'Library' }).click();
-  await page.getByRole('button', { name: 'Speak' }).click();
+  await page.getByRole('button', { name: 'Speak', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'What do you want to say?' })).toBeVisible();
   await expect(page.locator('#mic')).toBeVisible();
   await expect(page.locator('.micLabel')).toHaveText('Tap to speak');

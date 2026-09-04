@@ -15,12 +15,12 @@ jobs:
       VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
       VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
       VERCEL_CLI_VERSION: 59.10.0
-      RELEASE_SHA: bf01037e94bc0d454f65642efd15e7a581bc3211
+      RELEASE_SHA: e1fde2b58b44b489b7c4b256f910f70ca2415a26
       PROD_ALIAS: https://hinglish-companion.vercel.app
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: bf01037e94bc0d454f65642efd15e7a581bc3211
+          ref: e1fde2b58b44b489b7c4b256f910f70ca2415a26
           fetch-depth: 1
 
       - uses: actions/setup-node@v4

@@ -1,7 +1,7 @@
 name: Library Search V2 QA
 on:
   push:
-    branches: ["library-search-v2"]
+    branches: ["library-search-v2", "keep-talking-scenario-chains"]
     paths: [".library-search-v2-trigger"]
 permissions:
   contents: read
@@ -11,7 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: library-search-v2
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -32,6 +31,7 @@ jobs:
           node --check tests/library-search-tier23-expat.test.js
           node --check tests/library-search-tier23-friction.test.js
           node --check tests/library-search-survival.test.js
+          node --check tests/keep-talking-chains.test.js
           node --check tests/keep-talking.spec.js
       - name: Verify production voice runtime untouched
         run: |
@@ -46,6 +46,8 @@ jobs:
           node tests/library-search-tier23-friction.test.js
           node tests/library-search-survival.test.js
           node tests/voice-context-isolation.test.js
+      - name: Keep Talking conversation-chain benchmark
+        run: node tests/keep-talking-chains.test.js
       - name: Diagnose no-match query
         run: |
           node - <<'NODE'
@@ -61,3 +63,5 @@ jobs:
           npm install
           npx playwright install --with-deps chromium webkit
           npm run test:e2e
+      - name: Dependency vulnerability audit
+        run: npm audit --audit-level=high

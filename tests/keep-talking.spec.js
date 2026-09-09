@@ -26,7 +26,7 @@ test('Keep Talking shows three strong sequential suggestions and stays fully loc
   expect(text).toContain('when will the water come back');
   expect(text).toContain('when does the water supply come');
   expect(text).toContain('water tanker');
-  expect(text).not.toContain('ac');
+  expect(text).not.toContain('the ac is not cooling properly');
   expect(requests).toHaveLength(0);
 });
 
@@ -58,7 +58,7 @@ test('selected Keep Talking phrase can be saved, found in My Phrases, and return
   await page.getByRole('button',{name:/Save/i}).click();
   await expect(page.getByRole('button',{name:/Saved/i})).toBeVisible();
   await page.getByRole('button',{name:'My Phrases',exact:true}).click();
-  await expect(page.getByText('What time will the technician come?',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:/What time will the technician come\?/i})).toBeVisible();
   await page.getByRole('button',{name:'Speak',exact:true}).click();
   await expect(page.locator('#mic')).toBeVisible();
   await expect(page.locator('.micLabel')).toHaveText('Tap to speak');

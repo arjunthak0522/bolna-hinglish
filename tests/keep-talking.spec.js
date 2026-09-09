@@ -17,7 +17,7 @@ async function keepChoices(page){
 
 test('Keep Talking shows three strong sequential suggestions and stays fully local', async ({ page }) => {
   const requests=[];
-  await page.route('https://hinglish-companion.vercel.app/api/gemini', route=>{requests.push(route.request().postData());return route.abort();});
+  await page.route('**/api/gemini', route=>{requests.push(route.request().postData());return route.abort();});
   await page.goto('/');
   await openLibraryPhrase(page,'water stopped');
   const choices=await keepChoices(page);
@@ -32,7 +32,7 @@ test('Keep Talking shows three strong sequential suggestions and stays fully loc
 
 test('repeated Keep Talking chain navigation remains sequential with zero Gemini calls', async ({ page }) => {
   let requests=0;
-  await page.route('https://hinglish-companion.vercel.app/api/gemini', route=>{requests++;return route.abort();});
+  await page.route('**/api/gemini', route=>{requests++;return route.abort();});
   await page.goto('/');
   await openLibraryPhrase(page,'driver cannot find building');
   let choices=await keepChoices(page);
@@ -49,7 +49,7 @@ test('repeated Keep Talking chain navigation remains sequential with zero Gemini
 });
 
 test('selected Keep Talking phrase can be saved, found in My Phrases, and returns to Speak cleanly', async ({ page }) => {
-  await page.route('https://hinglish-companion.vercel.app/api/gemini', route=>route.abort());
+  await page.route('**/api/gemini', route=>route.abort());
   await page.goto('/');
   await openLibraryPhrase(page,'plumber today');
   const choices=await keepChoices(page);
@@ -66,7 +66,7 @@ test('selected Keep Talking phrase can be saved, found in My Phrases, and return
 
 test('Hear It still works after Keep Talking selection and only TTS calls Gemini', async ({ page }) => {
   const ops=[];
-  await page.route('https://hinglish-companion.vercel.app/api/gemini', async route=>{
+  await page.route('**/api/gemini', async route=>{
     const body=JSON.parse(route.request().postData()||'{}');
     ops.push(body.operation);
     if(body.operation==='tts')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,data:{output_audio:{data:pcmBase64(),mime_type:'audio/pcm'}}})});

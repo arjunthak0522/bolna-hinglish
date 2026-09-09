@@ -1,0 +1,103 @@
+name: Deploy validated Bolna candidate 933d62a
+
+on:
+  push:
+    branches: ["deploy-bolna-933d62a"]
+    paths: [".github/workflows/deploy-candidate-933d62a.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CANDIDATE_SHA: 933d62a49ce6a428be8f0c650b5eec56ca748287
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      PROD_URL: https://hinglish-companion.vercel.app
+      FALLBACK_DEPLOYMENT: hinglish-companion-9opb6pz2s-arjunthak-4571.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 933d62a49ce6a428be8f0c650b5eec56ca748287
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify exact validated source
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          node --check app-runtime.js
+          node --check keep-talking.js
+          node --check api/gemini.js
+          node --check api/health.js
+          grep -q 'keep-talking.js' index.html
+          echo "Exact candidate verified: $CANDIDATE_SHA"
+
+      - name: Verify Vercel access
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          STATUS=$(curl --silent --output /tmp/project.json --write-out "%{http_code}" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
+          test "$STATUS" = "200"
+          node -e 'const x=require("/tmp/project.json"); if(x.id!==process.env.VERCEL_PROJECT_ID||x.name!=="hinglish-companion") process.exit(2)'
+
+      - name: Deploy exact candidate to production
+        id: deploy
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          DEPLOY_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "DEPLOY_URL=$DEPLOY_URL" >> "$GITHUB_ENV"
+          echo "Production deployment: $DEPLOY_URL"
+
+      - name: Production smoke test with automatic rollback
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          rollback() {
+            echo "Smoke failed - restoring prior production deployment"
+            npx vercel promote "$FALLBACK_DEPLOYMENT" --yes --token="$VERCEL_TOKEN" || true
+          }
+          trap rollback ERR
+
+          for i in 1 2 3 4 5 6; do
+            STATUS=$(curl -L --silent --output /tmp/index.html --write-out "%{http_code}" "$PROD_URL/")
+            if [ "$STATUS" = "200" ]; then break; fi
+            sleep 5
+          done
+          test "$STATUS" = "200"
+          grep -q 'bolna - Hinglish Companion' /tmp/index.html
+          grep -q 'keep-talking.js' /tmp/index.html
+
+          KT_STATUS=$(curl -L --silent --output /tmp/keep-talking.js --write-out "%{http_code}" "$PROD_URL/keep-talking.js")
+          test "$KT_STATUS" = "200"
+          grep -q 'CURATED_CHAINS' /tmp/keep-talking.js
+          grep -q 'ROUGH_ROUTES' /tmp/keep-talking.js
+          grep -q 'min-height:44px' /tmp/index.html
+          grep -q 'min-height:48px' /tmp/index.html
+
+          HEALTH=$(curl -L --silent "$PROD_URL/api/health")
+          node -e 'const h=JSON.parse(process.argv[1]); if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1") process.exit(3)' "$HEALTH"
+
+          G=$(curl -L --silent -X POST "$PROD_URL/api/gemini" \
+            -H 'Content-Type: application/json' \
+            -H 'Origin: https://hinglish-companion.vercel.app' \
+            --data '{"operation":"generate","prompt":"Reply with the single word OK."}')
+          node -e 'const r=JSON.parse(process.argv[1]); if(!r.ok||r.diagnostics?.operation!=="generate") process.exit(4)' "$G"
+
+          trap - ERR
+          echo "PRODUCTION_SMOKE_PASS"

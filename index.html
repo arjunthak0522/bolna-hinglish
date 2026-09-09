@@ -9,6 +9,14 @@
   <link rel="preconnect" href="https://hinglish-companion.vercel.app" crossorigin>
   <title>bolna - Hinglish Companion</title>
   <link rel="stylesheet" href="./style.css">
+  <style>
+    .keepTalkingTrigger{min-height:44px!important;padding:8px 1px!important}
+    .keepTalkingChoice{min-height:48px!important;padding:12px 13px!important}
+    .keepTalkingTrigger b{font-size:0}
+    .keepTalkingTrigger b::before{content:'Keep talking';font-size:15px}
+    .keepTalkingTrigger b::after{content:'›';display:inline-block;margin-left:8px;font-size:20px;line-height:1;transform:rotate(90deg);transform-origin:center;transition:transform .18s ease;color:#b66024;vertical-align:-1px}
+    .keepTalking.open .keepTalkingTrigger b::after{transform:rotate(-90deg)}
+  </style>
 </head>
 <body>
   <main class="canvas"><section class="app" id="app"></section></main>

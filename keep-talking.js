@@ -3,7 +3,7 @@
     'the power keeps going out.':['Is there a scheduled power cut?','The backup power is not working.','Can someone come fix this today?'],
     'is there a scheduled power cut?':['The backup power is not working.','The generator has not started.','Can someone come fix this today?'],
     'the backup power is not working.':['The generator has not started.','I need an electrician today.','Can someone come fix this today?'],
-    'the generator has not started.':['I need an electrician today.','Can someone come fix this today?','Please call me before you come.'],
+    'the generator has not started.':['I need an electrician today.','Can someone come fix this today.','Please call me before you come.'],
     'the water has stopped.':['When will the water come back?','When does the water supply come?','We need a water tanker.'],
     'when will the water come back?':['When does the water supply come?','The water tank is empty.','We need a water tanker.'],
     'the water tank is empty.':['We need a water tanker.','When does the water supply come?','I need a plumber today.'],
@@ -47,6 +47,50 @@
     'i understand a little hindi.':['Please speak a little slower.','Can you say that again?','Please explain it simply.']
   };
 
+  const ROUGH_ROUTES = [
+    [/\b(electricity|power)\b.*\b(out|off|gone|cut|keeps? going|keeps? cutting)\b|\b(no|without)\s+(electricity|power)\b/i,'the power keeps going out.'],
+    [/\bbackup power\b.*\b(not working|not starting|failed|off)\b/i,'the backup power is not working.'],
+    [/\bgenerator\b.*\b(not started|not starting|not working|failed)\b/i,'the generator has not started.'],
+    [/\bwater\b.*\b(stopped|not coming|isn'?t coming|gone|off|no water)\b|\bno water\b/i,'the water has stopped.'],
+    [/\bwhen\b.*\bwater\b.*\b(back|come|return|start)\b/i,'when will the water come back?'],
+    [/\b(water )?tank\b.*\b(empty|low|finished)\b/i,'the water tank is empty.'],
+    [/\b(tanker|water tanker)\b/i,'we need a water tanker.'],
+    [/\b(plumber|plumbing)\b/i,'i need a plumber today.'],
+    [/\b(electrician|electrical repair)\b/i,'i need an electrician today.'],
+    [/\b(send|need|can).*\b(someone|technician|repair person|repairman)\b.*\b(today|now|fix|repair)\b|\bfix this today\b/i,'can someone come fix this today?'],
+    [/\bwhat time\b.*\b(come|coming|arrive|technician|plumber|electrician|repair)\b/i,'what time will the technician come?'],
+    [/\bcall me\b.*\bbefore\b.*\b(come|coming|arrive)\b/i,'please call me before you come.'],
+    [/\b(still leaking|still broken|still not fixed|not fixed yet|keeps leaking)\b/i,'it is still not fixed.'],
+    [/\b(came|came yesterday|was here yesterday)\b.*\b(still|didn'?t|did not)\b.*\b(fix|fixed|broken|work)\b/i,'someone came yesterday but it is still broken.'],
+    [/\bdriver\b.*\b(can'?t|cannot|couldn'?t|could not)\b.*\b(find|locate)\b.*\b(building|house|apartment|place)\b/i,'the driver cannot find my building.'],
+    [/\b(driver|cab|auto)\b.*\bwrong gate|wrong entrance\b/i,'the driver is at the wrong gate.'],
+    [/\bsend (me )?(your )?(live )?location|share (your )?(live )?location\b/i,'please send me your location.'],
+    [/\b(main gate|front gate)\b/i,'please come to the main gate.'],
+    [/\b(wait here|wait for me)\b/i,'please wait here for ten minutes.'],
+    [/\bdelivery\b.*\b(can'?t|cannot|couldn'?t|could not)\b.*\b(find|locate)\b.*\b(building|house|apartment|place)\b/i,'the delivery person cannot find the building.'],
+    [/\bdelivery\b.*\b(outside|at the gate|downstairs)\b/i,'the delivery person says he is outside.'],
+    [/\b(package|parcel)\b.*\b(delivered)\b.*\b(missing|don'?t have|do not have|not received|can'?t find)\b/i,'my package says delivered but i do not have it.'],
+    [/\b(guest|visitor)\b.*\b(at the gate|outside|security|let .* in|entry)\b/i,'please let my guest in.'],
+    [/\b(do you have|have you got|need|looking for)\b.*\b(medicine|medication|tablet|pill)\b|\bpharmacy\b.*\b(out of stock|don'?t have|doesn'?t have)\b/i,'the pharmacy does not have this medicine.'],
+    [/\b(another|different) brand\b.*\b(medicine|medication)?\b/i,'do you have another brand of this medicine?'],
+    [/\bgeneric\b.*\b(version|medicine|option|available)?\b/i,'do you have a generic version?'],
+    [/\bwhen\b.*\b(medicine|medication)\b.*\b(available|back|come|stock)\b/i,'when will this medicine be available?'],
+    [/\bdeliver\b.*\b(medicine|medication)\b.*\b(tonight|today|this evening)\b/i,'can you deliver this medicine tonight?'],
+    [/\b(less|not too) spicy\b/i,'please make it less spicy.'],
+    [/\b(missing item|item missing|something missing|missing from .*order)\b/i,'something is missing from my order.'],
+    [/\b(wrong order|not what i ordered|different order)\b/i,'this is not what i ordered.'],
+    [/\b(housekeeper|maid)\b.*\b(later|come later|today)\b/i,'please come later today.'],
+    [/\b(housekeeper|maid)\b.*\b(tomorrow|come tomorrow)\b/i,'please come tomorrow instead.'],
+    [/\bclean\b.*\b(again|properly|one more time)\b/i,'please clean this again.'],
+    [/\bwhich counter|what counter|where.*counter\b/i,'which counter do i go to?'],
+    [/\bwhat documents|which documents|documents do i need|papers do i need\b/i,'what documents do i need?'],
+    [/\b(token|queue number)\b.*\b(where|get|need)\b|\bwhere.*token\b/i,'where do i get a token?'],
+    [/\b(speak|talk)\b.*\bslower|slow down\b/i,'please speak a little slower.'],
+    [/\b(say|tell me)\b.*\b(again|one more time)|\brepeat that\b/i,'can you say that again?'],
+    [/\brepeat\b.*\b(number|phone|amount)|\bnumber again\b/i,'please say the number again.'],
+    [/\b(i )?(understand|know|speak)\b.*\b(little|some)\b.*\bhindi\b/i,'i understand a little hindi.']
+  ];
+
   const CHAINS = [
     {id:'power',match:/\b(electricity|power|generator|backup power|power cut)\b/i,queries:['is there a scheduled power cut','backup power not working','can someone come fix this today']},
     {id:'water',match:/\b(water|tank|tanker|pressure|tap|faucet|leak|toilet|sink)\b/i,queries:['when will the water come back','when does water supply come','need a water tanker']},
@@ -63,6 +107,12 @@
   const FALLBACK = ['please speak a little slower','please say that again','please write it down for me'];
   const norm = s => String(s || '').trim().toLowerCase();
 
+  function resolveRoughSource(english){
+    const text=norm(english);
+    const match=ROUGH_ROUTES.find(([pattern])=>pattern.test(text));
+    return match?.[1]||'';
+  }
+
   function getSuggestionQueries(english,ctx){
     const text=norm(english);
     const contextual=CHAINS.find(c=>c.match?.test(text)) || CHAINS.find(c=>c.context===ctx);
@@ -70,7 +120,8 @@
   }
 
   function resolveCuratedSuggestions(library,english,limit=5){
-    const targets=CURATED_CHAINS[norm(english)];
+    const source=CURATED_CHAINS[norm(english)] ? norm(english) : resolveRoughSource(english);
+    const targets=CURATED_CHAINS[source];
     if(!targets?.length)return[];
     const byEnglish=new Map(library.map(item=>[norm(item?.english),item]));
     return targets.map(t=>byEnglish.get(norm(t))).filter(Boolean).slice(0,limit);
@@ -119,7 +170,7 @@
     host.querySelectorAll('[data-keep-talking]').forEach(b=>b.onclick=()=>openLibraryPhrase(suggestions[+b.dataset.keepTalking]));
   }
 
-  window.BOLNA_KEEP_TALKING={CURATED_CHAINS,getSuggestionQueries,resolveCuratedSuggestions,resolveSuggestions};
+  window.BOLNA_KEEP_TALKING={CURATED_CHAINS,ROUGH_ROUTES,resolveRoughSource,getSuggestionQueries,resolveCuratedSuggestions,resolveSuggestions};
   if(typeof document==='undefined')return;
   injectStyles();
   const obs=new MutationObserver(()=>queueMicrotask(enhance));

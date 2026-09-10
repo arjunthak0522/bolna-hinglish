@@ -15,7 +15,7 @@ async function keepChoices(page){
   return page.locator('[data-keep-talking]');
 }
 
-test('Keep Talking shows three strong sequential suggestions and stays fully local', async ({ page }) => {
+test('Keep Talking shows coherent water continuations and stays fully local', async ({ page }) => {
   const requests=[];
   await page.route('**/api/gemini', route=>{requests.push(route.request().postData());return route.abort();});
   await page.goto('/');
@@ -25,27 +25,39 @@ test('Keep Talking shows three strong sequential suggestions and stays fully loc
   const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
   expect(text).toContain('when will the water come back');
   expect(text).toContain('when does the water supply come');
-  expect(text).toContain('water tanker');
-  expect(text).not.toContain('the ac is not cooling properly');
+  expect(text).toContain('water tank is empty');
+  expect(text).not.toContain('repair cost');
   expect(requests).toHaveLength(0);
 });
 
-test('repeated Keep Talking chain navigation remains sequential with zero Gemini calls', async ({ page }) => {
+test('driver flow never reverses location ownership and stays local', async ({ page }) => {
   let requests=0;
   await page.route('**/api/gemini', route=>{requests++;return route.abort();});
   await page.goto('/');
   await openLibraryPhrase(page,'driver cannot find building');
   let choices=await keepChoices(page);
   await expect(choices).toHaveCount(3);
-  await choices.filter({hasText:'Please send me your location.'}).click();
-  await expect(page.locator('.heard span')).toContainText('Please send me your location.');
-  choices=await keepChoices(page);
-  await expect(choices).toHaveCount(3);
+  let text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).not.toContain('send me your location');
+  expect(text).toContain('come to the main gate');
   await choices.filter({hasText:'Please come to the main gate.'}).click();
   await expect(page.locator('.heard span')).toContainText('Please come to the main gate.');
   choices=await keepChoices(page);
   await expect(choices).toHaveCount(3);
+  text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('call me when you reach');
   expect(requests).toBe(0);
+});
+
+test('tanker flow does not jump into repair conversation', async ({ page }) => {
+  await page.route('**/api/gemini', route=>route.abort());
+  await page.goto('/');
+  await openLibraryPhrase(page,'water tanker');
+  const choices=await keepChoices(page);
+  const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('call me before you come');
+  expect(text).not.toContain('repair cost');
+  expect(text).not.toContain('plumber');
 });
 
 test('selected Keep Talking phrase can be saved, found in My Phrases, and returns to Speak cleanly', async ({ page }) => {
@@ -83,7 +95,17 @@ test('Hear It still works after Keep Talking selection and only TTS calls Gemini
   await expect(page.getByRole('button',{name:/Hear it/i})).toBeVisible();
 });
 
-test('Keep Talking uses communication-repair fallbacks when context is general', async ({ page }) => {
+test('medicine delivery stays with pharmacy logistics rather than dosing advice', async ({ page }) => {
+  await page.goto('/');
+  await openLibraryPhrase(page,'deliver this medicine tonight');
+  const choices=await keepChoices(page);
+  const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).not.toContain('times a day');
+  expect(text).not.toContain('with food');
+  expect(text).not.toContain('empty stomach');
+});
+
+test('Keep Talking uses communication-repair flow when context is general', async ({ page }) => {
   await page.goto('/');
   await openLibraryPhrase(page,'understand a little Hindi');
   const choices=await keepChoices(page);

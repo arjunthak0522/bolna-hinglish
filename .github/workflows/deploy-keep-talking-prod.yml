@@ -1,0 +1,81 @@
+name: Deploy Keep Talking Production
+
+on:
+  push:
+    branches: ["keep-talking-conversation-graph"]
+    paths: [".deploy-keep-talking-prod-trigger"]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      RELEASE_SHA: 46911b7d5ec1f02159374e9046ff219e366f333f
+      PREVIOUS_PROD_URL: https://hinglish-companion-cal3mdwba-arjunthak-4571.vercel.app
+      PROD_ALIAS: hinglish-companion.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 46911b7d5ec1f02159374e9046ff219e366f333f
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify exact release source
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          node --check app-runtime.js
+          node --check keep-talking.js
+          node --check api/gemini.js
+          node --check api/health.js
+
+      - name: Verify Vercel project access
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN"
+          STATUS=$(curl --silent --output /tmp/project.json --write-out "%{http_code}" -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
+          test "$STATUS" = "200"
+          node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync("/tmp/project.json","utf8"));if(x.id!==process.env.VERCEL_PROJECT_ID||x.name!=="hinglish-companion")throw new Error("wrong Vercel project");console.log("Verified project",x.name,x.id)'
+
+      - name: Deploy exact release to production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          PROD_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
+          echo "Deployed $PROD_URL"
+
+      - name: Production smoke with rollback guard
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set +e
+          FAIL=0
+          echo "Smoke target: https://$PROD_ALIAS"
+          curl -fsS "https://$PROD_ALIAS/" -o /tmp/index.html || FAIL=1
+          curl -fsS "https://$PROD_ALIAS/keep-talking.js" -o /tmp/keep-talking.js || FAIL=1
+          curl -fsS "https://$PROD_ALIAS/phrase-library-conversation.js" -o /tmp/conversation.js || FAIL=1
+          curl -fsS "https://$PROD_ALIAS/api/health" -o /tmp/health.json || FAIL=1
+          grep -q "keep-talking.js" /tmp/index.html || FAIL=1
+          grep -q "min-height:44px" /tmp/index.html || FAIL=1
+          grep -q "CONVERSATION_GRAPH" /tmp/keep-talking.js || FAIL=1
+          grep -q "I'll send you my location" /tmp/keep-talking.js || FAIL=1
+          grep -q "How long will the water tanker take" /tmp/keep-talking.js || FAIL=1
+          grep -q "Can you check where the package was left" /tmp/keep-talking.js || FAIL=1
+          node -e 'const fs=require("fs");const h=JSON.parse(fs.readFileSync("/tmp/health.json","utf8"));if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1")process.exit(1)' || FAIL=1
+          if [ "$FAIL" != "0" ]; then
+            echo "PRODUCTION_SMOKE_FAILED - restoring previous production alias"
+            npx vercel alias set "$PREVIOUS_PROD_URL" "$PROD_ALIAS" --token="$VERCEL_TOKEN"
+            exit 1
+          fi
+          echo "PRODUCTION_SMOKE_PASS"

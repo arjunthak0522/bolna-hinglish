@@ -16,6 +16,9 @@
     .keepTalkingTrigger b::before{content:'Keep talking';font-size:15px}
     .keepTalkingTrigger b::after{content:'›';display:inline-block;margin-left:8px;font-size:20px;line-height:1;transform:rotate(90deg);transform-origin:center;transition:transform .18s ease;color:#b66024;vertical-align:-1px}
     .keepTalking.open .keepTalkingTrigger b::after{transform:rotate(-90deg)}
+    @media(max-width:520px){
+      .resultView .speakAgain{position:static!important;left:auto!important;bottom:auto!important;transform:none!important;width:100%!important;margin:18px 0 14px!important;box-shadow:none!important}
+    }
   </style>
 </head>
 <body>

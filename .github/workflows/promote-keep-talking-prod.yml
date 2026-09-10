@@ -1,0 +1,50 @@
+name: Promote Verified Keep Talking Production
+on:
+  push:
+    branches: ["keep-talking-conversation-graph"]
+    paths: [".promote-keep-talking-prod-trigger"]
+permissions:
+  contents: read
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      NEW_PROD_URL: https://hinglish-companion-li0zd9hw9-arjunthak-4571.vercel.app
+      OLD_PROD_URL: https://hinglish-companion-cal3mdwba-arjunthak-4571.vercel.app
+      PROD_ALIAS: hinglish-companion.vercel.app
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Promote verified deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --no-save vercel@59.10.0
+          npx vercel alias set "$NEW_PROD_URL" "$PROD_ALIAS" --token="$VERCEL_TOKEN"
+      - name: Verify live production with rollback guard
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set +e
+          PASS=0
+          for i in 1 2 3 4 5 6 7 8; do
+            curl -fsS "https://$PROD_ALIAS/" -o /tmp/index.html && \
+            curl -fsS "https://$PROD_ALIAS/keep-talking.js" -o /tmp/keep.js && \
+            curl -fsS "https://$PROD_ALIAS/api/health" -o /tmp/health.json && \
+            grep -q "min-height:44px" /tmp/index.html && \
+            grep -q "phrase-library-conversation.js" /tmp/index.html && \
+            grep -q "CONVERSATION_GRAPH" /tmp/keep.js && \
+            grep -q "I'll send you my location" /tmp/keep.js && \
+            grep -q "How long will the water tanker take" /tmp/keep.js && \
+            node -e 'const fs=require("fs");const h=JSON.parse(fs.readFileSync("/tmp/health.json","utf8"));if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1")process.exit(1)' && PASS=1 && break
+            sleep 3
+          done
+          if [ "$PASS" != "1" ]; then
+            echo "LIVE_SMOKE_FAILED - restoring old production"
+            npx vercel alias set "$OLD_PROD_URL" "$PROD_ALIAS" --token="$VERCEL_TOKEN"
+            exit 1
+          fi
+          echo "PRODUCTION_SMOKE_PASS"

@@ -1,7 +1,7 @@
 name: Library Search V2 QA
 on:
   push:
-    branches: ["library-search-v2", "keep-talking-scenario-chains"]
+    branches: ["library-search-v2", "keep-talking-scenario-chains", "keep-talking-conversation-graph"]
     paths: [".library-search-v2-trigger"]
 permissions:
   contents: read

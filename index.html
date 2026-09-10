@@ -31,5 +31,18 @@
   <script src="./library-search.js"></script>
   <script src="./app-runtime.js"></script>
   <script src="./keep-talking.js"></script>
+  <script>
+    document.addEventListener('click',event=>{
+      const trigger=event.target.closest&&event.target.closest('.keepTalkingTrigger');
+      if(!trigger||window.innerWidth>520)return;
+      setTimeout(()=>{
+        const card=trigger.closest('.keepTalking');
+        if(!card||!card.classList.contains('open'))return;
+        const safeBottom=window.innerHeight-84;
+        const rect=card.getBoundingClientRect();
+        if(rect.bottom>safeBottom)window.scrollBy({top:rect.bottom-safeBottom+16,behavior:'auto'});
+      },0);
+    });
+  </script>
 </body>
 </html>

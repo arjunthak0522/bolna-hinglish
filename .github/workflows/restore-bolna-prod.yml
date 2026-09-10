@@ -1,0 +1,20 @@
+name: Restore Bolna Production Alias
+on:
+  push:
+    branches: ["keep-talking-conversation-graph"]
+    paths: [".restore-bolna-prod-trigger"]
+permissions:
+  contents: read
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore previous known-good production alias
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --no-save vercel@59.10.0
+          npx vercel alias set https://hinglish-companion-cal3mdwba-arjunthak-4571.vercel.app hinglish-companion.vercel.app --token="$VERCEL_TOKEN"

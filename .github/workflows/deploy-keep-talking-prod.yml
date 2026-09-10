@@ -55,26 +55,39 @@ jobs:
           echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
           echo "Deployed $PROD_URL"
 
-      - name: Production smoke with rollback guard
+      - name: Verify exact deployment directly
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -e
+          npx vercel curl / --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/index.html
+          npx vercel curl /keep-talking.js --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/keep-talking.js
+          npx vercel curl /phrase-library-conversation.js --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/conversation.js
+          npx vercel curl /api/health --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/health.json
+          grep -q "keep-talking.js" /tmp/index.html
+          grep -q "min-height:44px" /tmp/index.html
+          grep -q "CONVERSATION_GRAPH" /tmp/keep-talking.js
+          grep -q "I'll send you my location" /tmp/keep-talking.js
+          grep -q "How long will the water tanker take" /tmp/keep-talking.js
+          grep -q "Can you check where the package was left" /tmp/keep-talking.js
+          node -e 'const fs=require("fs");const h=JSON.parse(fs.readFileSync("/tmp/health.json","utf8"));if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1")process.exit(1)'
+          echo "DIRECT_DEPLOYMENT_SMOKE_PASS"
+
+      - name: Verify production alias with rollback guard
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set +e
-          FAIL=0
-          echo "Smoke target: https://$PROD_ALIAS"
-          curl -fsS "https://$PROD_ALIAS/" -o /tmp/index.html || FAIL=1
-          curl -fsS "https://$PROD_ALIAS/keep-talking.js" -o /tmp/keep-talking.js || FAIL=1
-          curl -fsS "https://$PROD_ALIAS/phrase-library-conversation.js" -o /tmp/conversation.js || FAIL=1
-          curl -fsS "https://$PROD_ALIAS/api/health" -o /tmp/health.json || FAIL=1
-          grep -q "keep-talking.js" /tmp/index.html || FAIL=1
-          grep -q "min-height:44px" /tmp/index.html || FAIL=1
-          grep -q "CONVERSATION_GRAPH" /tmp/keep-talking.js || FAIL=1
-          grep -q "I'll send you my location" /tmp/keep-talking.js || FAIL=1
-          grep -q "How long will the water tanker take" /tmp/keep-talking.js || FAIL=1
-          grep -q "Can you check where the package was left" /tmp/keep-talking.js || FAIL=1
-          node -e 'const fs=require("fs");const h=JSON.parse(fs.readFileSync("/tmp/health.json","utf8"));if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1")process.exit(1)' || FAIL=1
-          if [ "$FAIL" != "0" ]; then
-            echo "PRODUCTION_SMOKE_FAILED - restoring previous production alias"
+          PASS=0
+          for i in 1 2 3 4 5 6; do
+            curl -fsS "https://$PROD_ALIAS/" -o /tmp/live-index.html && \
+            curl -fsS "https://$PROD_ALIAS/keep-talking.js" -o /tmp/live-keep.js && \
+            grep -q "min-height:44px" /tmp/live-index.html && \
+            grep -q "CONVERSATION_GRAPH" /tmp/live-keep.js && PASS=1 && break
+            sleep 3
+          done
+          if [ "$PASS" != "1" ]; then
+            echo "PRODUCTION_ALIAS_SMOKE_FAILED - restoring previous production alias"
             npx vercel alias set "$PREVIOUS_PROD_URL" "$PROD_ALIAS" --token="$VERCEL_TOKEN"
             exit 1
           fi

@@ -30,7 +30,7 @@ test('Keep Talking shows coherent water continuations and stays fully local', as
   expect(requests).toHaveLength(0);
 });
 
-test('driver flow never reverses location ownership and stays local', async ({ page }) => {
+test('driver flow keeps location ownership correct across repeated turns', async ({ page }) => {
   let requests=0;
   await page.route('**/api/gemini', route=>{requests++;return route.abort();});
   await page.goto('/');
@@ -38,26 +38,72 @@ test('driver flow never reverses location ownership and stays local', async ({ p
   let choices=await keepChoices(page);
   await expect(choices).toHaveCount(3);
   let text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
-  expect(text).not.toContain('send me your location');
+  expect(text).toContain("i'll send you my location");
   expect(text).toContain('come to the main gate');
-  await choices.filter({hasText:'Please come to the main gate.'}).click();
-  await expect(page.locator('.heard span')).toContainText('Please come to the main gate.');
+  expect(text).not.toContain('send me your location');
+  await choices.filter({hasText:"I'll send you my location."}).click();
+  await expect(page.locator('.heard span')).toContainText("I'll send you my location.");
   choices=await keepChoices(page);
   await expect(choices).toHaveCount(3);
   text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('come to the main gate');
   expect(text).toContain('call me when you reach');
+  expect(text).toContain('which gate are you at');
+  expect(text).not.toContain('send me your location');
   expect(requests).toBe(0);
 });
 
-test('tanker flow does not jump into repair conversation', async ({ page }) => {
+test('tanker flow uses tanker logistics and never repair language', async ({ page }) => {
   await page.route('**/api/gemini', route=>route.abort());
   await page.goto('/');
   await openLibraryPhrase(page,'water tanker');
   const choices=await keepChoices(page);
+  await expect(choices).toHaveCount(3);
   const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('how long will the water tanker take');
+  expect(text).toContain('how much will the water tanker cost');
   expect(text).toContain('call me before you come');
   expect(text).not.toContain('repair cost');
   expect(text).not.toContain('plumber');
+});
+
+test('missing package flow investigates the completed delivery instead of giving arrival instructions', async ({ page }) => {
+  await page.route('**/api/gemini', route=>route.abort());
+  await page.goto('/');
+  await openLibraryPhrase(page,'package says delivered but missing');
+  const choices=await keepChoices(page);
+  await expect(choices).toHaveCount(3);
+  const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('check where the package was left');
+  expect(text).toContain('check with security');
+  expect(text).toContain('delivery person to call me');
+  expect(text).not.toContain('leave the package with security');
+  expect(text).not.toContain('when they arrive');
+});
+
+test('restaurant missing-item complaint advances resolution without unrelated food customization', async ({ page }) => {
+  await page.route('**/api/gemini', route=>route.abort());
+  await page.goto('/');
+  await openLibraryPhrase(page,'something is missing from my order');
+  const choices=await keepChoices(page);
+  await expect(choices).toHaveCount(2);
+  const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('send the missing item now');
+  expect(text).toContain('check the order again');
+  expect(text).not.toContain('make this fresh');
+  expect(text).not.toContain('pack this separately');
+});
+
+test('restaurant wrong-order complaint stays on replacement path', async ({ page }) => {
+  await page.route('**/api/gemini', route=>route.abort());
+  await page.goto('/');
+  await openLibraryPhrase(page,'not what I ordered');
+  const choices=await keepChoices(page);
+  await expect(choices).toHaveCount(2);
+  const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('replace this');
+  expect(text).toContain('check the order again');
+  expect(text).not.toContain('something is missing');
 });
 
 test('selected Keep Talking phrase can be saved, found in My Phrases, and returns to Speak cleanly', async ({ page }) => {
@@ -99,7 +145,9 @@ test('medicine delivery stays with pharmacy logistics rather than dosing advice'
   await page.goto('/');
   await openLibraryPhrase(page,'deliver this medicine tonight');
   const choices=await keepChoices(page);
+  await expect(choices).toHaveCount(2);
   const text=(await page.locator('.keepTalkingList').innerText()).toLowerCase();
+  expect(text).toContain('deliver the medicine to my apartment');
   expect(text).not.toContain('times a day');
   expect(text).not.toContain('with food');
   expect(text).not.toContain('empty stomach');

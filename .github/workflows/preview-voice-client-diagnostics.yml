@@ -1,0 +1,89 @@
+name: Preview Voice Client Diagnostics
+
+on:
+  push:
+    branches: ["keep-talking-conversation-graph"]
+    paths: [".preview-voice-client-diagnostics-trigger"]
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: keep-talking-conversation-graph
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply two-stage voice hotfix
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="state='transcribing';render();const d=await voiceCore(b);if(id!==reqId)return;transcript=d.transcript;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};delete result.transcript;result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          new="state='transcribing';note('voice_flow',{phase:'transcribing'});render();transcript=await transcribe(b);if(id!==reqId)return;note('voice_flow',{phase:'transcribed'});localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}state='generating';note('voice_flow',{phase:'generating'});render();const d=await generateCore(transcript);if(id!==reqId)return;note('voice_flow',{phase:'generated'});result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};result.speechText=canonicalSpeechText(result);state='ready';note('voice_flow',{phase:'ready'});remember();render();note('voice_flow',{phase:'rendered_ready'});void prefetchVoice(result.speechText)"
+          if old not in s:
+              # already hotfixed path; add instrumentation to it instead
+              old2="state='transcribing';render();transcript=await transcribe(b);if(id!==reqId)return;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}state='generating';render();const d=await generateCore(transcript);if(id!==reqId)return;result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+              if old2 not in s: raise SystemExit('voice path not found')
+              s=s.replace(old2,new)
+          else:
+              s=s.replace(old,new)
+          # Safe preview-only telemetry: stage/timing/error metadata only, never transcript/audio/result text.
+          oldnote="function note(stage,data={}){diagnostics.events.push({stage,at:Date.now(),...data});if(diagnostics.events.length>40)diagnostics.events.shift()}"
+          newnote="function note(stage,data={}){const evt={stage,at:Date.now(),...data};diagnostics.events.push(evt);if(diagnostics.events.length>40)diagnostics.events.shift();if(location.hostname.includes('voice-diag')){try{fetch('/api/client-log',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({stage:evt.stage,phase:evt.phase||null,status:evt.status||null,ms:evt.ms||null,category:evt.category||null,state}),keepalive:true,cache:'no-store'}).catch(()=>{})}catch{}}}"
+          if oldnote not in s: raise SystemExit('note function not found')
+          s=s.replace(oldnote,newnote)
+          # emit safe error stage from voice catch
+          oldcatch="}catch(e){error={title:e.userTitle||'Couldn’t process that',detail:e.message||'Please try again.'};state='idle';render()}};"
+          newcatch="}catch(e){note('voice_flow',{phase:'error',category:e.category||e.userTitle||'unknown',status:e.status||null});error={title:e.userTitle||'Couldn’t process that',detail:e.message||'Please try again.'};state='idle';render()}};"
+          if oldcatch not in s: raise SystemExit('voice catch not found')
+          s=s.replace(oldcatch,newcatch,1)
+          p.write_text(s)
+          PY
+          mkdir -p api
+          cat > api/client-log.js <<'EOF'
+          module.exports=async function handler(req,res){
+            res.setHeader('Cache-Control','no-store');
+            if(req.method!=='POST') return res.status(405).json({ok:false});
+            const b=req.body&&typeof req.body==='object'?req.body:{};
+            const safe={stage:String(b.stage||'').slice(0,80),phase:b.phase?String(b.phase).slice(0,80):null,status:Number.isFinite(Number(b.status))?Number(b.status):null,ms:Number.isFinite(Number(b.ms))?Number(b.ms):null,category:b.category?String(b.category).slice(0,120):null,state:b.state?String(b.state).slice(0,40):null};
+            console.info('bolna.client',safe);
+            return res.status(204).end();
+          };
+          EOF
+          node --check app-runtime.js
+          node --check api/client-log.js
+          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -q "const d=await generateCore(transcript)" app-runtime.js
+          ! grep -A2 -B2 "async function startListening" app-runtime.js | grep -q "await voiceCore(b)" || exit 1
+      - name: Deploy diagnostics preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          URL=$(npx vercel deploy --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PREVIEW_URL=$URL" >> "$GITHUB_ENV"
+          npx vercel alias set "$URL" hinglish-companion-voice-diag-arjunthak-4571.vercel.app --token="$VERCEL_TOKEN"
+      - name: Smoke diagnostics preview
+        shell: bash
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsS "https://hinglish-companion-voice-diag-arjunthak-4571.vercel.app/app-runtime.js" -o /tmp/app.js && grep -q "transcript=await transcribe(b)" /tmp/app.js && grep -q "voice_flow" /tmp/app.js; then
+              echo DIAG_PREVIEW_PASS
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1

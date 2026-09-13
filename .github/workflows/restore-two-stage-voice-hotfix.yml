@@ -59,7 +59,7 @@ jobs:
           grep -q "const d=await generateCore(transcript)" app-runtime.js
       - name: Run existing browser and dependency gates
         run: |
-          npm ci
+          npm install
           npx playwright install --with-deps chromium webkit
           npx playwright test
           npm audit --audit-level=high

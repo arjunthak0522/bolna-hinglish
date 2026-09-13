@@ -1,0 +1,135 @@
+name: Release verified voice hotfix
+
+on:
+  push:
+    branches: [keep-talking-conversation-graph]
+    paths:
+      - '.github/workflows/release-tested-voice-hotfix.yml'
+
+permissions:
+  contents: write
+
+env:
+  VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+  VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+  VERCEL_CLI_VERSION: 59.10.0
+  TESTED_DEPLOYMENT: https://hinglish-companion-6x3m1g4q3-arjunthak-4571.vercel.app
+  FALLBACK_DEPLOYMENT: https://hinglish-companion-li0zd9hw9-arjunthak-4571.vercel.app
+  PROD_DOMAIN: hinglish-companion.vercel.app
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: keep-talking-conversation-graph
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Persist exact two-stage microphone flow in source
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="state='transcribing';render();const d=await voiceCore(b);if(id!==reqId)return;transcript=d.transcript;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};delete result.transcript;result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          new="state='transcribing';render();transcript=await transcribe(b);if(id!==reqId)return;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}state='generating';render();const d=await generateCore(transcript);if(id!==reqId)return;result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          if old not in s:
+              if new in s:
+                  print('Two-stage path already persisted')
+              else:
+                  raise SystemExit('Expected microphone path not found - refusing release')
+          else:
+              p.write_text(s.replace(old,new,1))
+          PY
+
+          cat > tests/voice-pipeline-guard.test.js <<'EOF'
+          const test=require('node:test');
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          test('microphone flow must remain transcribe then generate, never voice_core',()=>{
+            const s=fs.readFileSync('app-runtime.js','utf8');
+            const start=s.indexOf('async function startListening()');
+            const end=s.indexOf('async function submitTyped()',start);
+            assert.ok(start>=0&&end>start,'startListening block missing');
+            const block=s.slice(start,end);
+            assert.match(block,/transcript=await transcribe\(b\)/);
+            assert.match(block,/const d=await generateCore\(transcript\)/);
+            assert.doesNotMatch(block,/await voiceCore\(b\)/);
+          });
+          EOF
+
+          node --check app-runtime.js
+          node --test tests/voice-pipeline-guard.test.js tests/keep-talking-chains.test.js
+
+      - name: Run browser regression suite
+        run: |
+          npm install
+          npx playwright install --with-deps chromium webkit
+          npm run test:e2e
+
+      - name: Persist hotfix and permanent regression guard
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-runtime.js tests/voice-pipeline-guard.test.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'Persist two-stage voice pipeline and regression guard'
+            git push origin HEAD:keep-talking-conversation-graph
+          fi
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Install pinned Vercel CLI
+        run: npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+
+      - name: Verify exact tested deployment before promotion
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npx vercel curl "$TESTED_DEPLOYMENT/app-runtime.js" --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" > /tmp/tested-app.js
+          grep -q "transcript=await transcribe(b)" /tmp/tested-app.js
+          grep -q "const d=await generateCore(transcript)" /tmp/tested-app.js
+          if sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/tested-app.js | grep -q 'await voiceCore(b)'; then
+            echo 'Tested deployment still contains forbidden voice_core microphone path'
+            exit 1
+          fi
+
+      - name: Promote exact user-tested deployment with rollback guard
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          rollback() {
+            echo 'Production verification failed - restoring prior known-good deployment'
+            npx vercel alias set "$FALLBACK_DEPLOYMENT" "$PROD_DOMAIN" --token="$VERCEL_TOKEN"
+          }
+          trap rollback ERR
+
+          npx vercel alias set "$TESTED_DEPLOYMENT" "$PROD_DOMAIN" --token="$VERCEL_TOKEN"
+
+          ok=0
+          for i in $(seq 1 18); do
+            if npx vercel curl "https://$PROD_DOMAIN/app-runtime.js" --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" > /tmp/prod-app.js 2>/dev/null; then
+              if grep -q "transcript=await transcribe(b)" /tmp/prod-app.js \
+                && grep -q "const d=await generateCore(transcript)" /tmp/prod-app.js \
+                && ! sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/prod-app.js | grep -q 'await voiceCore(b)'; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
+
+          npx vercel curl "https://$PROD_DOMAIN/" --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" > /tmp/prod-index.html
+          grep -q 'keep-talking.js' /tmp/prod-index.html
+          grep -q 'phrase-library-conversation.js' /tmp/prod-index.html
+          trap - ERR
+          echo "PRODUCTION_RELEASE_PASS source=$SOURCE_SHA tested_deployment=$TESTED_DEPLOYMENT"

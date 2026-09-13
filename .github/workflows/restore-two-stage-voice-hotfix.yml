@@ -1,0 +1,74 @@
+name: Restore Two-Stage Voice Hotfix
+
+on:
+  push:
+    branches: ["keep-talking-conversation-graph"]
+    paths: [".restore-two-stage-voice-hotfix-trigger"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: keep-talking-conversation-graph
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore separated transcription and generation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="state='transcribing';render();const d=await voiceCore(b);if(id!==reqId)return;transcript=d.transcript;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};delete result.transcript;result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          new="state='transcribing';render();transcript=await transcribe(b);if(id!==reqId)return;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}state='generating';render();const d=await generateCore(transcript);if(id!==reqId)return;result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          if old not in s:
+              raise SystemExit('Expected combined voice_core callsite not found - refusing broad patch')
+          if s.count(old)!=1:
+              raise SystemExit(f'Expected exactly one combined callsite, found {s.count(old)}')
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Add regression guard
+        shell: bash
+        run: |
+          cat > tests/two-stage-voice-regression.test.js <<'EOF'
+          const fs=require('fs');
+          const src=fs.readFileSync('app-runtime.js','utf8');
+          const start=src.indexOf('async function startListening()');
+          const end=src.indexOf('async function submitTyped()',start);
+          if(start<0||end<0) throw new Error('startListening block not found');
+          const block=src.slice(start,end);
+          if(!block.includes('transcript=await transcribe(b)')) throw new Error('microphone flow must transcribe first');
+          if(!block.includes('const d=await generateCore(transcript)')) throw new Error('microphone flow must generate from transcript second');
+          if(block.includes('await voiceCore(b)')) throw new Error('combined voice_core microphone path is forbidden');
+          if(block.indexOf('transcript=await transcribe(b)')>block.indexOf('const d=await generateCore(transcript)')) throw new Error('generation occurs before transcription');
+          console.log('TWO_STAGE_VOICE_REGRESSION_PASS');
+          EOF
+      - name: Verify exact hotfix
+        run: |
+          node --check app-runtime.js
+          node tests/two-stage-voice-regression.test.js
+          node tests/keep-talking-chains.test.js
+          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -q "const d=await generateCore(transcript)" app-runtime.js
+      - name: Run existing browser and dependency gates
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium webkit
+          npx playwright test
+          npm audit --audit-level=high
+      - name: Commit verified hotfix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app-runtime.js tests/two-stage-voice-regression.test.js
+          git diff --cached --quiet && { echo 'No changes to commit'; exit 1; }
+          git commit -m "Restore separated voice transcription and generation"
+          git push origin HEAD:keep-talking-conversation-graph

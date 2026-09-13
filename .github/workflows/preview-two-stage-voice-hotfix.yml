@@ -1,0 +1,68 @@
+name: Preview Two-Stage Voice Hotfix
+
+on:
+  push:
+    branches: ["keep-talking-conversation-graph"]
+    paths: [".preview-two-stage-voice-hotfix-trigger"]
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+      VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+      VERCEL_CLI_VERSION: 59.10.0
+      BASE_SHA: 46911b7d5ec1f02159374e9046ff219e366f333f
+      PREVIEW_ALIAS: hinglish-companion-voice-hotfix-arjunthak-4571.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 46911b7d5ec1f02159374e9046ff219e366f333f
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply exact two-stage voice hotfix
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-runtime.js')
+          s=p.read_text()
+          old="state='transcribing';render();const d=await voiceCore(b);if(id!==reqId)return;transcript=d.transcript;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};delete result.transcript;result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          new="state='transcribing';render();transcript=await transcribe(b);if(id!==reqId)return;localStorage.setItem('bolna_voice_used','1');const inferred=infer(transcript);if(context==='General'&&inferred){context=inferred;localStorage.setItem('bolna_context',inferred)}state='generating';render();const d=await generateCore(transcript);if(id!==reqId)return;result={...d,polite:'',casual:'',moreHindi:'',words:[],_enriched:false,_audioState:'loading'};result.speechText=canonicalSpeechText(result);state='ready';remember();render();void prefetchVoice(result.speechText)"
+          if s.count(old)!=1: raise SystemExit(f'expected one voice_core callsite, got {s.count(old)}')
+          p.write_text(s.replace(old,new))
+          PY
+          node --check app-runtime.js
+          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -q "const d=await generateCore(transcript)" app-runtime.js
+          ! grep -q "state='transcribing';render();const d=await voiceCore(b)" app-runtime.js
+      - name: Deploy preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          test -n "$VERCEL_TOKEN"
+          npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+          rm -rf .vercel
+          PREVIEW_URL=$(npx vercel deploy --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
+          echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
+          npx vercel alias set "$PREVIEW_URL" "$PREVIEW_ALIAS" --token="$VERCEL_TOKEN"
+          echo "PREVIEW_URL=$PREVIEW_URL"
+          echo "PREVIEW_ALIAS=https://$PREVIEW_ALIAS"
+      - name: Smoke preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          INDEX=$(npx vercel curl / --deployment "$PREVIEW_URL")
+          JS=$(npx vercel curl /app-runtime.js --deployment "$PREVIEW_URL")
+          echo "$INDEX" | grep -q "bolna - Hinglish Companion"
+          echo "$JS" | grep -q "transcript=await transcribe(b)"
+          echo "$JS" | grep -q "const d=await generateCore(transcript)"
+          if echo "$JS" | grep -q "state='transcribing';render();const d=await voiceCore(b)"; then exit 1; fi
+          echo "VOICE_HOTFIX_PREVIEW_PASS"

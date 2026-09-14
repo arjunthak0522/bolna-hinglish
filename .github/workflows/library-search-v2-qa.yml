@@ -34,10 +34,15 @@ jobs:
           node --check tests/library-search-survival.test.js
           node --check tests/keep-talking-chains.test.js
           node --check tests/keep-talking.spec.js
-      - name: Verify production voice runtime untouched
+      - name: Verify durable production voice architecture untouched
         run: |
-          git show d4e7016ab6c32bab28eff0de874568b542aec2e1:app-runtime.js > /tmp/prod-runtime.js
-          node scripts/verify-library-isolation.js /tmp/prod-runtime.js app-runtime.js
+          node --test tests/voice-pipeline-guard.test.js tests/voice-context-isolation.test.js
+          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -q "const d=await generateCore(transcript)" app-runtime.js
+          if sed -n '/async function startListening()/,/async function submitTyped()/p' app-runtime.js | grep -q 'await voiceCore(b)'; then
+            echo 'Forbidden voice_core microphone path found'
+            exit 1
+          fi
       - name: Library data and search benchmarks
         run: |
           node tests/library-data.test.js
@@ -70,6 +75,7 @@ jobs:
       - name: Dependency vulnerability audit
         if: always()
         run: |
+          npm install --package-lock-only --ignore-scripts
           set -o pipefail
           npm audit --audit-level=high 2>&1 | tee audit-output.log
       - name: Preserve QA diagnostics

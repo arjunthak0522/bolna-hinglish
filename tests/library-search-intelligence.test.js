@@ -3,9 +3,10 @@ const vm=require('vm');
 global.window={};
 vm.runInThisContext(fs.readFileSync('phrase-library.js','utf8'));
 vm.runInThisContext(fs.readFileSync('phrase-library-expanded.js','utf8'));
+vm.runInThisContext(fs.readFileSync('phrase-library-conversation.js','utf8'));
 const search=require('../library-search.js');
 const lib=window.BOLNA_PHRASE_LIBRARY;
-if(!Array.isArray(lib)||lib.length<170)throw new Error(`expanded library too small: ${lib?.length}`);
+if(!Array.isArray(lib)||lib.length<200)throw new Error(`expanded library too small: ${lib?.length}`);
 const cases=[
   [['mall distance','distance mall','mall far'],'How far is the mall?'],
   [['mall walking','walk to mall','mall on foot'],'Is the mall within walking distance?'],
@@ -52,7 +53,36 @@ const cases=[
   [['vet nearby','dog doctor nearby','pet veterinarian'],'Is there a vet nearby?'],
   [['atm nearby','closest atm','cash machine near'],'Where is the nearest ATM?'],
   [['grocery nearby','closest supermarket','nearest grocery'],'Where is the nearest grocery store?'],
-  [['bathroom nearby','toilet near','restroom closest'],'Is there a bathroom nearby?']
+  [['bathroom nearby','toilet near','restroom closest'],'Is there a bathroom nearby?'],
+
+  [['blinkit milk missing','zepto item missing','instamart incomplete order'],'One item is missing from my order.'],
+  [['blinkit wrong item','zepto incorrect product','instamart different item'],'You sent the wrong item.'],
+  [['ordered two got one','blinkit quantity missing','zepto two only one'],'I ordered two but only received one.'],
+  [['refund item blinkit','zepto money back item','instamart refund product'],'Please refund this item.'],
+  [['refund no replacement','money back not exchange','dont replace refund'],'I need a refund, not a replacement.'],
+  [['refund pending','blinkit refund not received','money back delayed'],'The refund has not arrived yet.'],
+  [['already paid online','payment went through','blinkit paid already'],'The payment already went through.'],
+  [['charged twice','double charged order','duplicate payment blinkit'],'I was charged twice.'],
+  [['blinkit vegetables bad','zepto veggies stale','produce not fresh delivery'],'These vegetables are not fresh.'],
+  [['expired item blinkit','grocery expiry past','zepto product expired'],'This item is expired.'],
+  [['packet open','seal broken delivery','grocery packet opened'],'The packet is open.'],
+  [['milk leaking','blinkit milk leak','damaged milk packet'],'The milk is leaking.'],
+  [['dont substitute','no substitution blinkit','do not replace brand'],'Do not substitute this item.'],
+  [['another brand ok','different brand fine','substitute brand okay'],'Another brand is fine.'],
+  [['brand unavailable dont send','out of stock no substitute','dont send if no brand'],'Do not send it if this brand is unavailable.'],
+  [['delivery wrong gate','blinkit rider wrong entrance','zepto wrong gate'],'You are at the wrong gate.'],
+  [['come gate 2','delivery second gate','rider gate two'],'Please come to Gate 2.'],
+  [['come tower b','delivery block b','blinkit rider tower b'],'Please come to Tower B.'],
+  [['security let you in','guard allow delivery','society security entry'],'Security will let you in.'],
+  [['leave with guard','delivery security leave','blinkit guard package'],'Please leave it with the guard.'],
+  [['leave reception','front desk delivery','package lobby reception'],'Please leave it at reception.'],
+  [['call when reach','delivery rider call arrive','blinkit call when there'],'Call me when you reach.'],
+  [['coming downstairs','delivery wait downstairs','rider wait coming down'],'I am coming downstairs.'],
+  [['dont cancel order','blinkit rider no cancel','zepto do not cancel'],'Please do not cancel the order.'],
+  [['location correct','address right delivery','map pin correct'],'The location is correct.'],
+  [['already reported issue','complaint already made','support issue reported'],'I already reported this issue.'],
+  [['connect support','customer care agent','blinkit support person'],'Can you connect me to support?'],
+  [['resolve today','support fix today','complaint urgent today'],'Please resolve this today.']
 ];
 let total=0,top1=0,top3=0;
 const failures=[];

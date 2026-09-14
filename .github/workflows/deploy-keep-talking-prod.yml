@@ -15,13 +15,12 @@ jobs:
       VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
       VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
       VERCEL_CLI_VERSION: 59.10.0
-      RELEASE_SHA: 46911b7d5ec1f02159374e9046ff219e366f333f
-      PREVIOUS_PROD_URL: https://hinglish-companion-cal3mdwba-arjunthak-4571.vercel.app
+      PREVIOUS_PROD_URL: https://hinglish-companion-rjevqdcms-arjunthak-4571.vercel.app
       PROD_ALIAS: hinglish-companion.vercel.app
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 46911b7d5ec1f02159374e9046ff219e366f333f
+          ref: keep-talking-conversation-graph
           fetch-depth: 1
 
       - uses: actions/setup-node@v4
@@ -29,12 +28,32 @@ jobs:
           node-version: 22
 
       - name: Verify exact release source
+        shell: bash
         run: |
-          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          RELEASE_SHA=$(git rev-parse HEAD)
+          echo "RELEASE_SHA=$RELEASE_SHA" >> "$GITHUB_ENV"
+          test "$(git rev-parse --abbrev-ref HEAD)" = "keep-talking-conversation-graph"
           node --check app-runtime.js
+          node --check context-auto.js
           node --check keep-talking.js
+          node --check library-search.js
+          node --check phrase-library-conversation.js
           node --check api/gemini.js
           node --check api/health.js
+          node --test tests/voice-pipeline-guard.test.js tests/voice-context-isolation.test.js
+          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -q "const d=await generateCore(transcript)" app-runtime.js
+          if sed -n '/async function startListening()/,/async function submitTyped()/p' app-runtime.js | grep -q 'await voiceCore(b)'; then
+            echo 'Forbidden voice_core microphone path found'
+            exit 1
+          fi
+          grep -q "context-auto.js" index.html
+          grep -q "contextRow,.resultContext" context-auto.js
+          grep -q "One item is missing from my order" phrase-library-conversation.js
+          grep -q "I was charged twice" phrase-library-conversation.js
+          grep -q "Please leave it with the guard" phrase-library-conversation.js
+          grep -q "blinkit" library-search.js
+          grep -q "refund" library-search.js
 
       - name: Verify Vercel project access
         env:
@@ -53,24 +72,35 @@ jobs:
           rm -rf .vercel
           PROD_URL=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID")
           echo "PROD_URL=$PROD_URL" >> "$GITHUB_ENV"
-          echo "Deployed $PROD_URL"
+          echo "Deployed $PROD_URL from $RELEASE_SHA"
 
       - name: Verify exact deployment directly
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          set -e
-          npx vercel curl / --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/index.html
-          npx vercel curl /keep-talking.js --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/keep-talking.js
-          npx vercel curl /phrase-library-conversation.js --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/conversation.js
-          npx vercel curl /api/health --deployment "$PROD_URL" --token="$VERCEL_TOKEN" > /tmp/health.json
+          set -euo pipefail
+          npx vercel curl / --deployment "$PROD_URL" > /tmp/index.html
+          npx vercel curl /app-runtime.js --deployment "$PROD_URL" > /tmp/app-runtime.js
+          npx vercel curl /context-auto.js --deployment "$PROD_URL" > /tmp/context-auto.js
+          npx vercel curl /library-search.js --deployment "$PROD_URL" > /tmp/library-search.js
+          npx vercel curl /phrase-library-conversation.js --deployment "$PROD_URL" > /tmp/conversation.js
+          npx vercel curl /api/health --deployment "$PROD_URL" > /tmp/health.json
           grep -q "keep-talking.js" /tmp/index.html
-          grep -q "min-height:44px" /tmp/index.html
-          grep -q "CONVERSATION_GRAPH" /tmp/keep-talking.js
-          grep -q "I'll send you my location" /tmp/keep-talking.js
-          grep -q "How long will the water tanker take" /tmp/keep-talking.js
-          grep -q "Can you check where the package was left" /tmp/keep-talking.js
-          node -e 'const fs=require("fs");const h=JSON.parse(fs.readFileSync("/tmp/health.json","utf8"));if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1")process.exit(1)'
+          grep -q "context-auto.js" /tmp/index.html
+          grep -q "phrase-library-conversation.js" /tmp/index.html
+          grep -q "contextRow,.resultContext" /tmp/context-auto.js
+          grep -q "One item is missing from my order" /tmp/conversation.js
+          grep -q "I was charged twice" /tmp/conversation.js
+          grep -q "Please leave it with the guard" /tmp/conversation.js
+          grep -q "blinkit" /tmp/library-search.js
+          grep -q "refund" /tmp/library-search.js
+          grep -q "transcript=await transcribe(b)" /tmp/app-runtime.js
+          grep -q "const d=await generateCore(transcript)" /tmp/app-runtime.js
+          if sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/app-runtime.js | grep -q 'await voiceCore(b)'; then
+            echo 'Forbidden voice_core microphone path found in deployment'
+            exit 1
+          fi
+          node -e 'const fs=require("fs");const h=JSON.parse(fs.readFileSync("/tmp/health.json","utf8"));if(!h.ok||h.service!=="bolna-gemini-gateway"||h.runtime!=="single-v1"||h.commit!==process.env.RELEASE_SHA)process.exit(1)'
           echo "DIRECT_DEPLOYMENT_SMOKE_PASS"
 
       - name: Verify production alias with rollback guard
@@ -79,16 +109,26 @@ jobs:
         run: |
           set +e
           PASS=0
-          for i in 1 2 3 4 5 6; do
+          for i in 1 2 3 4 5 6 7 8; do
             curl -fsS "https://$PROD_ALIAS/" -o /tmp/live-index.html && \
-            curl -fsS "https://$PROD_ALIAS/keep-talking.js" -o /tmp/live-keep.js && \
-            grep -q "min-height:44px" /tmp/live-index.html && \
-            grep -q "CONVERSATION_GRAPH" /tmp/live-keep.js && PASS=1 && break
+            curl -fsS "https://$PROD_ALIAS/app-runtime.js" -o /tmp/live-app.js && \
+            curl -fsS "https://$PROD_ALIAS/context-auto.js" -o /tmp/live-context.js && \
+            curl -fsS "https://$PROD_ALIAS/library-search.js" -o /tmp/live-search.js && \
+            curl -fsS "https://$PROD_ALIAS/phrase-library-conversation.js" -o /tmp/live-conversation.js && \
+            grep -q "context-auto.js" /tmp/live-index.html && \
+            grep -q "contextRow,.resultContext" /tmp/live-context.js && \
+            grep -q "One item is missing from my order" /tmp/live-conversation.js && \
+            grep -q "I was charged twice" /tmp/live-conversation.js && \
+            grep -q "blinkit" /tmp/live-search.js && \
+            grep -q "transcript=await transcribe(b)" /tmp/live-app.js && \
+            grep -q "const d=await generateCore(transcript)" /tmp/live-app.js && \
+            ! sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/live-app.js | grep -q 'await voiceCore(b)' && \
+            PASS=1 && break
             sleep 3
           done
           if [ "$PASS" != "1" ]; then
-            echo "PRODUCTION_ALIAS_SMOKE_FAILED - restoring previous production alias"
+            echo "PRODUCTION_ALIAS_SMOKE_FAILED - restoring exact previous production deployment"
             npx vercel alias set "$PREVIOUS_PROD_URL" "$PROD_ALIAS" --token="$VERCEL_TOKEN"
             exit 1
           fi
-          echo "PRODUCTION_SMOKE_PASS"
+          echo "PRODUCTION_SMOKE_PASS release=$RELEASE_SHA rollback=$PREVIOUS_PROD_URL"

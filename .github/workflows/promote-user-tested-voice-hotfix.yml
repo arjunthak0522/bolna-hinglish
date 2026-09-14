@@ -1,0 +1,80 @@
+name: Promote user-tested voice hotfix
+
+on:
+  push:
+    branches: [keep-talking-conversation-graph]
+    paths:
+      - '.github/workflows/promote-user-tested-voice-hotfix.yml'
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
+  VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
+  VERCEL_CLI_VERSION: 59.10.0
+  TESTED_DEPLOYMENT: https://hinglish-companion-6x3m1g4q3-arjunthak-4571.vercel.app
+  FALLBACK_DEPLOYMENT: https://hinglish-companion-li0zd9hw9-arjunthak-4571.vercel.app
+  PROD_DOMAIN: hinglish-companion.vercel.app
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0184809b7c6da9e55a5b13b062088bf32c62c745
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify durable source guard
+        shell: bash
+        run: |
+          node --check app-runtime.js
+          node --test tests/voice-pipeline-guard.test.js tests/keep-talking-chains.test.js
+          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -q "const d=await generateCore(transcript)" app-runtime.js
+          if sed -n '/async function startListening()/,/async function submitTyped()/p' app-runtime.js | grep -q 'await voiceCore(b)'; then
+            echo 'Forbidden voice_core microphone path found'
+            exit 1
+          fi
+
+      - name: Install pinned Vercel CLI
+        run: npm install --no-save "vercel@$VERCEL_CLI_VERSION"
+
+      - name: Promote exact user-tested deployment and verify public production
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          rollback() {
+            echo 'Verification failed. Restoring previous production deployment.'
+            npx vercel alias set "$FALLBACK_DEPLOYMENT" "$PROD_DOMAIN" --token="$VERCEL_TOKEN" || true
+          }
+          trap rollback ERR
+
+          npx vercel alias set "$TESTED_DEPLOYMENT" "$PROD_DOMAIN" --token="$VERCEL_TOKEN"
+
+          ok=0
+          for i in $(seq 1 18); do
+            if curl -fsS --max-time 15 "https://$PROD_DOMAIN/app-runtime.js?release=voice-hotfix" -o /tmp/prod-app.js; then
+              if grep -q "transcript=await transcribe(b)" /tmp/prod-app.js \
+                && grep -q "const d=await generateCore(transcript)" /tmp/prod-app.js \
+                && ! sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/prod-app.js | grep -q 'await voiceCore(b)'; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
+
+          curl -fsS --max-time 15 "https://$PROD_DOMAIN/?release=voice-hotfix" -o /tmp/prod-index.html
+          grep -q 'keep-talking.js' /tmp/prod-index.html
+          grep -q 'phrase-library-conversation.js' /tmp/prod-index.html
+
+          trap - ERR
+          echo 'PRODUCTION_RELEASE_PASS'

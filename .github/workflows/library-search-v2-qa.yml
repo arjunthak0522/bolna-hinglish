@@ -36,6 +36,7 @@ jobs:
           node --check tests/library-search-tier23-friction.test.js
           node --check tests/library-search-survival.test.js
           node --check tests/library-search-driver-househelp.test.js
+          node --check tests/library-search-no-match.test.js
           node --check tests/keep-talking-chains.test.js
           node --check tests/driver-househelp-followups.test.js
           node --check tests/keep-talking.spec.js
@@ -57,6 +58,7 @@ jobs:
           node tests/library-search-tier23-friction.test.js
           node tests/library-search-survival.test.js
           node tests/library-search-driver-househelp.test.js
+          node tests/library-search-no-match.test.js
           node tests/voice-context-isolation.test.js
       - name: Keep Talking conversation-chain benchmark
         run: |

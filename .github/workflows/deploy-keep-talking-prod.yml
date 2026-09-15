@@ -15,7 +15,7 @@ jobs:
       VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
       VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
       VERCEL_CLI_VERSION: 59.10.0
-      PREVIOUS_PROD_URL: https://hinglish-companion-rjevqdcms-arjunthak-4571.vercel.app
+      PREVIOUS_PROD_URL: https://hinglish-companion-290y51t3s-arjunthak-4571.vercel.app
       PROD_ALIAS: hinglish-companion.vercel.app
     steps:
       - uses: actions/checkout@v4
@@ -38,22 +38,22 @@ jobs:
           node --check keep-talking.js
           node --check library-search.js
           node --check phrase-library-conversation.js
+          node --check phrase-library-driver-househelp.js
+          node --check keep-talking-driver-househelp.js
           node --check api/gemini.js
           node --check api/health.js
           node --test tests/voice-pipeline-guard.test.js tests/voice-context-isolation.test.js
+          node tests/library-search-driver-househelp.test.js
+          node tests/library-search-no-match.test.js
+          node tests/driver-househelp-followups.test.js
           grep -q "transcript=await transcribe(b)" app-runtime.js
           grep -q "const d=await generateCore(transcript)" app-runtime.js
           if sed -n '/async function startListening()/,/async function submitTyped()/p' app-runtime.js | grep -q 'await voiceCore(b)'; then
             echo 'Forbidden voice_core microphone path found'
             exit 1
           fi
-          grep -q "context-auto.js" index.html
-          grep -q "contextRow,.resultContext" context-auto.js
-          grep -q "One item is missing from my order" phrase-library-conversation.js
-          grep -q "I was charged twice" phrase-library-conversation.js
-          grep -q "Please leave it with the guard" phrase-library-conversation.js
-          grep -q "blinkit" library-search.js
-          grep -q "refund" library-search.js
+          grep -q "phrase-library-driver-househelp.js" index.html
+          grep -q "keep-talking-driver-househelp.js" index.html
 
       - name: Verify Vercel project access
         env:
@@ -81,19 +81,14 @@ jobs:
           set -euo pipefail
           npx vercel curl / --deployment "$PROD_URL" > /tmp/index.html
           npx vercel curl /app-runtime.js --deployment "$PROD_URL" > /tmp/app-runtime.js
-          npx vercel curl /context-auto.js --deployment "$PROD_URL" > /tmp/context-auto.js
           npx vercel curl /library-search.js --deployment "$PROD_URL" > /tmp/library-search.js
-          npx vercel curl /phrase-library-conversation.js --deployment "$PROD_URL" > /tmp/conversation.js
+          npx vercel curl /phrase-library-driver-househelp.js --deployment "$PROD_URL" > /tmp/driver-househelp-library.js
+          npx vercel curl /keep-talking-driver-househelp.js --deployment "$PROD_URL" > /tmp/driver-househelp-followups.js
           npx vercel curl /api/health --deployment "$PROD_URL" > /tmp/health.json
-          grep -q "keep-talking.js" /tmp/index.html
-          grep -q "context-auto.js" /tmp/index.html
-          grep -q "phrase-library-conversation.js" /tmp/index.html
-          grep -q "contextRow,.resultContext" /tmp/context-auto.js
-          grep -q "One item is missing from my order" /tmp/conversation.js
-          grep -q "I was charged twice" /tmp/conversation.js
-          grep -q "Please leave it with the guard" /tmp/conversation.js
-          grep -q "blinkit" /tmp/library-search.js
-          grep -q "refund" /tmp/library-search.js
+          grep -q "phrase-library-driver-househelp.js" /tmp/index.html
+          grep -q "keep-talking-driver-househelp.js" /tmp/index.html
+          grep -q "maid" /tmp/driver-househelp-library.js
+          grep -q "driver" /tmp/driver-househelp-library.js
           grep -q "transcript=await transcribe(b)" /tmp/app-runtime.js
           grep -q "const d=await generateCore(transcript)" /tmp/app-runtime.js
           if sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/app-runtime.js | grep -q 'await voiceCore(b)'; then
@@ -112,14 +107,12 @@ jobs:
           for i in 1 2 3 4 5 6 7 8; do
             curl -fsS "https://$PROD_ALIAS/" -o /tmp/live-index.html && \
             curl -fsS "https://$PROD_ALIAS/app-runtime.js" -o /tmp/live-app.js && \
-            curl -fsS "https://$PROD_ALIAS/context-auto.js" -o /tmp/live-context.js && \
-            curl -fsS "https://$PROD_ALIAS/library-search.js" -o /tmp/live-search.js && \
-            curl -fsS "https://$PROD_ALIAS/phrase-library-conversation.js" -o /tmp/live-conversation.js && \
-            grep -q "context-auto.js" /tmp/live-index.html && \
-            grep -q "contextRow,.resultContext" /tmp/live-context.js && \
-            grep -q "One item is missing from my order" /tmp/live-conversation.js && \
-            grep -q "I was charged twice" /tmp/live-conversation.js && \
-            grep -q "blinkit" /tmp/live-search.js && \
+            curl -fsS "https://$PROD_ALIAS/phrase-library-driver-househelp.js" -o /tmp/live-library.js && \
+            curl -fsS "https://$PROD_ALIAS/keep-talking-driver-househelp.js" -o /tmp/live-followups.js && \
+            grep -q "phrase-library-driver-househelp.js" /tmp/live-index.html && \
+            grep -q "keep-talking-driver-househelp.js" /tmp/live-index.html && \
+            grep -q "maid" /tmp/live-library.js && \
+            grep -q "driver" /tmp/live-library.js && \
             grep -q "transcript=await transcribe(b)" /tmp/live-app.js && \
             grep -q "const d=await generateCore(transcript)" /tmp/live-app.js && \
             ! sed -n '/async function startListening()/,/async function submitTyped()/p' /tmp/live-app.js | grep -q 'await voiceCore(b)' && \

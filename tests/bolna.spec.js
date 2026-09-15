@@ -62,7 +62,7 @@ test('only one authoritative runtime is loaded and no browser Gemini key is used
   expect(ownership.runtime).toBe('single-v1');
   expect(ownership.diagnostics).toBe('single-v1');
   expect(ownership.runtimeScripts).toEqual(['./app-runtime.js']);
-  expect(ownership.dataScripts).toEqual(['./phrase-library.js', './phrase-library-expanded.js', './phrase-library-tier23-friction.js', './phrase-library-survival.js', './phrase-library-conversation.js']);
+  expect(ownership.dataScripts).toEqual(['./phrase-library.js', './phrase-library-expanded.js', './phrase-library-tier23-friction.js', './phrase-library-survival.js', './phrase-library-conversation.js', './phrase-library-driver-househelp.js']);
   expect(ownership.geminiKey).toBeNull();
 });
 
@@ -82,13 +82,7 @@ test('transcription client always sends normalized WAV to secure backend', async
 
 test('five consecutive phrase cycles recover without refresh', async ({ page }) => {
   await boot(page);
-  const phrases = [
-    'Stop here.',
-    'Can you turn the AC down a little?',
-    'Please send the location on WhatsApp.',
-    'Can I pay by UPI?',
-    'Please follow Google Maps and take the next left.',
-  ];
+  const phrases = ['Stop here.','Can you turn the AC down a little?','Please send the location on WhatsApp.','Can I pay by UPI?','Please follow Google Maps and take the next left.'];
   for (const phrase of phrases) {
     await typedPhrase(page, phrase);
     await expect(page.getByRole('button', { name: /Hear it/i })).toBeVisible();

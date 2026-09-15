@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 async function openLibraryPhrase(page,query){
-  await page.getByRole('button',{name:'Library',exact:true}).click();
+  await page.getByRole('tab',{name:'Library'}).click();
   await page.locator('#librarySearch').fill(query);
   await page.locator('[data-library-open]').first().click();
   await expect(page.locator('.hinglish')).toBeVisible();

@@ -80,6 +80,10 @@
     return out.slice(0,limit);
   }
 
+  kt.enhancedSuggestions=enhancedSuggestions;
+  kt.chooseDepthPool=choosePool;
+  if(typeof document==='undefined')return;
+
   function upgradeCard(){
     const root=document.querySelector('.resultView');
     const card=root?.querySelector('.keepTalking');
@@ -96,7 +100,6 @@
     card.dataset.depthUpgraded='1';
   }
 
-  kt.enhancedSuggestions=enhancedSuggestions;
   const obs=new MutationObserver(()=>queueMicrotask(upgradeCard));
   obs.observe(document.getElementById('app'),{childList:true,subtree:true});
   upgradeCard();

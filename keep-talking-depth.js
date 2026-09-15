@@ -14,6 +14,7 @@
   const COOK_PLAN=['What are you cooking today?','Please make dal, rice, and one vegetable.','Please make four rotis.','Please use less oil.','Please use less salt.','Please make it less spicy.'];
   const COOK_STORE=['Please make enough for dinner too.','Please save the leftovers.','Please put the food in the fridge.','Please do not throw away the leftovers.','Please turn off the gas when you finish.','Please use filtered water for cooking.'];
   const GROCERIES=['What groceries are running low?','Please make a grocery list.','Please tell me before something runs out.','Please wash the vegetables first.','Please use filtered water for cooking.','Please call me if there is any problem.'];
+  const ENRICH_SCENARIO=/^(driver-(pickup|fuel|errands|route|car)|househelp-(attendance|cleaning|laundry)|cook-|household-groceries)/;
 
   Object.assign(g,{
     'please come ten minutes early.':{scenario:'driver-pickup',partner:'driver',phase:'schedule',owner:'them',next:DRIVER_SCHEDULE},
@@ -76,7 +77,8 @@
       seen.add(k);out.push(item);
     };
     (state.next||[]).forEach(add);
-    choosePool(english,context,state).forEach(add);
+    const shouldEnrich=!state.next?.length||ENRICH_SCENARIO.test(state.scenario||'');
+    if(shouldEnrich)choosePool(english,context,state).forEach(add);
     return out.slice(0,limit);
   }
 
@@ -93,7 +95,7 @@
     if(!suggestions.length)return;
     const list=card.querySelector('.keepTalkingList');
     if(!list)return;
-    list.innerHTML=suggestions.map((x,i)=>`<button class="keepTalkingChoice" type="button" data-keep-talking-depth="${i}"><b>${typeof esc==='function'?esc(x.english):x.english}</b><em>→</em></button>`).join('');
+    list.innerHTML=suggestions.map((x,i)=>`<button class="keepTalkingChoice" type="button" data-keep-talking="${i}" data-keep-talking-depth="${i}"><b>${typeof esc==='function'?esc(x.english):x.english}</b><em>→</em></button>`).join('');
     card.querySelectorAll('[data-keep-talking-depth]').forEach(b=>b.onclick=()=>openLibraryPhrase(suggestions[+b.dataset.keepTalkingDepth]));
     const hint=card.querySelector('.keepTalkingHint');
     if(hint)hint.textContent='Choose what you need next. Bolna keeps the same conversation and shows the next useful step.';

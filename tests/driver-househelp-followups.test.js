@@ -27,7 +27,7 @@ const cases=[
   ['Please make enough for dinner too.',['Please save the leftovers.','Please put the food in the fridge.','Please do not throw away the leftovers.']],
   ['Please wash the vegetables first.',['Please use filtered water for cooking.','What are you cooking today?','Please make dal, rice, and one vegetable.']],
   ['Please use filtered water for cooking.',['Please make dal, rice, and one vegetable.','Please make enough for dinner too.','Please turn off the gas when you finish.']],
-  ['Please turn off the gas when you finish.',['Please lock the door when you leave.','Please leave the key with security.','Please call me if there is a problem.']],
+  ['Please turn off the gas when you finish.',['Please lock the door when you leave.','Please leave the key with security.','Please call me if there is any problem.']],
   ['What groceries are running low?',['Please make a grocery list.','Please tell me before something runs out.']]
 ];
 

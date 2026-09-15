@@ -95,6 +95,10 @@
     }
     return d+(i<a.length||j<b.length?1:0)<=1;
   }
+  function safePrefixMatch(a,b){
+    if(!a||!b||Math.min(a.length,b.length)<3)return false;
+    return a.startsWith(b)||b.startsWith(a);
+  }
   function expansions(token){
     const out=new Set([token]);
     for(const [key,vals] of aliasMap){
@@ -115,14 +119,14 @@
       let best=0;
       if(englishWords.includes(token))best=Math.max(best,18);
       if(metaWords.includes(token))best=Math.max(best,11);
-      if(englishWords.some(w=>w.startsWith(token)||token.startsWith(w)))best=Math.max(best,10);
-      if(metaWords.some(w=>w.startsWith(token)||token.startsWith(w)))best=Math.max(best,6);
+      if(englishWords.some(w=>safePrefixMatch(w,token)))best=Math.max(best,10);
+      if(metaWords.some(w=>safePrefixMatch(w,token)))best=Math.max(best,6);
       for(const ex of expansions(token)){
         if(ex===token)continue;
         if(englishWords.includes(ex))best=Math.max(best,8);
         if(metaWords.includes(ex))best=Math.max(best,5);
-        if(englishWords.some(w=>w.startsWith(ex)||ex.startsWith(w)))best=Math.max(best,6);
-        if(metaWords.some(w=>w.startsWith(ex)||ex.startsWith(w)))best=Math.max(best,4);
+        if(englishWords.some(w=>safePrefixMatch(w,ex)))best=Math.max(best,6);
+        if(metaWords.some(w=>safePrefixMatch(w,ex)))best=Math.max(best,4);
       }
       if(!best&&englishWords.some(w=>nearWord(token,w)))best=5;
       if(!best&&metaWords.some(w=>nearWord(token,w)))best=3;

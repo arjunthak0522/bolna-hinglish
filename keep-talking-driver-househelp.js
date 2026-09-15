@@ -24,7 +24,7 @@
     'please make enough for dinner too.':{scenario:'cook-leftovers',partner:'cook',phase:'store',owner:'them',next:['Please save the leftovers.','Please put the food in the fridge.','Please do not throw away the leftovers.']},
     'please wash the vegetables first.':{scenario:'cook-prep',partner:'cook',phase:'prep',owner:'them',next:['Please use filtered water for cooking.','What are you cooking today?','Please make dal, rice, and one vegetable.']},
     'please use filtered water for cooking.':{scenario:'cook-prep',partner:'cook',phase:'prep',owner:'them',next:['Please make dal, rice, and one vegetable.','Please make enough for dinner too.','Please turn off the gas when you finish.']},
-    'please turn off the gas when you finish.':{scenario:'cook-safety',partner:'cook',phase:'finish',owner:'them',next:['Please lock the door when you leave.','Please leave the key with security.','Please call me if there is a problem.']},
+    'please turn off the gas when you finish.':{scenario:'cook-safety',partner:'cook',phase:'finish',owner:'them',next:['Please lock the door when you leave.','Please leave the key with security.','Please call me if there is any problem.']},
     'what groceries are running low?':{scenario:'household-groceries',partner:'househelp',phase:'inventory',owner:'them',next:['Please make a grocery list.','Please tell me before something runs out.']},
     'please make a grocery list.':{scenario:'household-groceries',partner:'househelp',phase:'inventory',owner:'them',next:['Please tell me before something runs out.','What groceries are running low?']}
   });

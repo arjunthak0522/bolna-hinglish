@@ -54,7 +54,7 @@ const rough=[
 for(const [src,need] of rough) assert(out(src).map(norm).includes(norm(need)),`${src}: rough route missing ${need}; got ${out(src).join(' | ')}`);
 
 const domestic=lib.filter(x=>x.category==='Driver & car'||x.category==='Househelp & cooking');
-assert.strictEqual(domestic.length,84,`expected 84 domestic phrases; got ${domestic.length}`);
+assert.strictEqual(domestic.length,85,`expected 85 domestic phrases; got ${domestic.length}`);
 const connected=new Set();
 for(const [key,state] of Object.entries(kt.CONVERSATION_GRAPH)){
   connected.add(norm(key));

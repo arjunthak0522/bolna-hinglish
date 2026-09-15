@@ -50,6 +50,7 @@
     ['change','coins','small notes'],
     ['vegetables','veggies','produce'],
     ['grocery','groceries','supermarket','kirana','ration shop'],
+    ['2kg','2 kg','two kilos','two kg','2 kilos'],
     ['walking','walk','on foot'],
     ['late','delay','delayed'],
     ['upstairs','up'],

@@ -22,7 +22,7 @@ const cases=[
   ['Are you coming today?',['What time are you coming today?','Please tell me if you are running late.','Please tell me in advance if you cannot come.']],
   ['Please sweep and mop the floor.',['Please use less water when mopping.','Please clean under the sofa.','Please clean under the bed.']],
   ['Please use this cleaner.',['Please clean the bathroom properly.','Please do not use bleach on this.','Please clean under the sofa.']],
-  ['What are you cooking today?',['Please make dal, rice, and one vegetable.','Please use less oil.','Please make enough for dinner too.']],
+  ['What are you cooking today?',['Please make dal, rice, and one vegetable.','Please make four rotis.','Please make enough for dinner too.']],
   ['Please make dal, rice, and one vegetable.',['Please use less oil.','Please use less salt.','Please make it less spicy.']],
   ['Please make enough for dinner too.',['Please save the leftovers.','Please put the food in the fridge.','Please do not throw away the leftovers.']],
   ['Please wash the vegetables first.',['Please use filtered water for cooking.','What are you cooking today?','Please make dal, rice, and one vegetable.']],

@@ -18,16 +18,12 @@ test('library loads expanded static phrases with Hinglish and phonetics without 
 test('library search understands rough English intent and keeps reranking as query changes', async ({ page }) => {
   await page.getByRole('button', { name: 'Library' }).click();
   const search = page.getByPlaceholder('Search in English…');
-
   await search.fill('mall distance');
   await expect(page.locator('.phraseLibraryCard').first().getByText('How far is the mall?')).toBeVisible();
-
   await search.fill('mall distance walking');
   await expect(page.locator('.phraseLibraryCard').first().getByText('Is the mall within walking distance?')).toBeVisible();
-
   await search.fill('maid tomorrow no come');
   await expect(page.locator('.phraseLibraryCard').first().getByText('You do not need to come tomorrow.')).toBeVisible();
-
   await search.fill('UPI');
   await expect(page.getByText('Can I pay by UPI?')).toBeVisible();
   await expect(page.getByText('Please stop right here.')).toHaveCount(0);
@@ -46,11 +42,11 @@ test('no strong match can be handed to Speak without calling Gemini during searc
   let geminiCalls = 0;
   await page.route('**/api/gemini', async route => { geminiCalls += 1; await route.abort(); });
   await page.getByRole('button', { name: 'Library' }).click();
-  await page.getByPlaceholder('Search in English…').fill('purple submarine umbrella');
+  await page.getByPlaceholder('Search in English…').fill('quantum submarine accordion');
   await expect(page.getByRole('button', { name: 'Ask Bolna with this' })).toBeVisible();
   expect(geminiCalls).toBe(0);
   await page.getByRole('button', { name: 'Ask Bolna with this' }).click();
-  await expect(page.locator('#typed')).toHaveValue('purple submarine umbrella');
+  await expect(page.locator('#typed')).toHaveValue('quantum submarine accordion');
 });
 
 test('opening a library phrase shows phonetics and can save to My Phrases', async ({ page }) => {

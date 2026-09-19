@@ -135,7 +135,7 @@
     return {key,...(CONVERSATION_GRAPH[key]||{})};
   }
 
-  function resolveGraphSuggestions(library,english,limit=3){
+  function resolveGraphSuggestions(library,english,limit=5){
     const state=getConversationState(english);
     if(!state.next?.length)return[];
     const byEnglish=new Map(library.map(item=>[norm(item?.english),item]));
@@ -146,7 +146,7 @@
       if(k===norm(english)||blocked.has(k))continue;
       const item=byEnglish.get(k);
       if(item)out.push(item);
-      if(out.length>=Math.min(limit,3))break;
+      if(out.length>=limit)break;
     }
     return out;
   }
@@ -157,20 +157,31 @@
     return FALLBACK;
   }
 
-  function resolveSuggestions(library,engine,english,ctx,limit=3){
+  function generatedSuggestionItems(list,english,ctx){
+    const current=norm(english),repair=getConversationState(english).scenario==='communication-repair',seen=new Set(),out=[];
+    for(const raw of Array.isArray(list)?list:[]){
+      const text=String(raw||'').trim(),key=norm(text);
+      if(!text||text.length>120||key===current||seen.has(key))continue;
+      if(!repair&&/\b(say (that|it) again|speak (a little )?slower|write it down|repeat that)\b/i.test(text))continue;
+      seen.add(key);out.push({english:text,context:ctx||'General',_generated:true});
+    }
+    return out;
+  }
+
+  function resolveSuggestions(library,engine,english,ctx,limit=5,generated=[]){
     if(!Array.isArray(library)||!library.length)return[];
-    const graph=resolveGraphSuggestions(library,english,limit);
-    if(graph.length)return graph;
-    if(!engine?.rank)return[];
-    const current=norm(english),seen=new Set(),out=[];
+    const out=[],seen=new Set(),current=norm(english);
+    const add=item=>{const key=norm(item?.english);if(!item||!key||key===current||seen.has(key)||out.length>=limit)return;seen.add(key);out.push(item)};
+    for(const item of resolveGraphSuggestions(library,english,limit))add(item);
+    for(const item of generatedSuggestionItems(generated,english,ctx))add(item);
+    if(out.length)return out.slice(0,limit);
+    if(getConversationState(english).scenario!=='communication-repair'||!engine?.rank)return[];
     for(const query of FALLBACK){
       const ranked=engine.rank(library,query,'All')||[];
       const item=ranked.map(r=>r.item).find(x=>x&&norm(x.english)!==current&&!seen.has(norm(x.english)));
-      if(!item)continue;
-      seen.add(norm(item.english));out.push(item);
-      if(out.length>=Math.min(limit,3))break;
+      add(item);
     }
-    return out;
+    return out.slice(0,limit);
   }
 
   function injectStyles(){
@@ -190,14 +201,14 @@
     const root=document.querySelector('.resultView');
     if(!root||root.querySelector('.keepTalking'))return;
     let suggestions=[];
-    try{suggestions=resolveSuggestions(phraseLibrary,window.BOLNA_LIBRARY_SEARCH,transcript,context,3)}catch{return}
+    try{suggestions=resolveSuggestions(phraseLibrary,window.BOLNA_LIBRARY_SEARCH,transcript,context,5,result?.nextSuggestions||[])}catch{return}
     if(!suggestions.length)return;
     const host=document.createElement('section');host.className='keepTalking';
     host.innerHTML=`<button class="keepTalkingTrigger" type="button"><b>Keep talking →</b><span>What might you need next?</span></button><div class="keepTalkingList">${suggestions.map((x,i)=>`<button class="keepTalkingChoice" type="button" data-keep-talking="${i}"><b>${esc(x.english)}</b><em>→</em></button>`).join('')}</div><p class="keepTalkingHint">Tap the next thing you want to say. Bolna stays in the same conversation.</p>`;
     const anchor=root.querySelector('.variantActions')||root.querySelector('.tabs');
     anchor?.parentNode.insertBefore(host,anchor);
     host.querySelector('.keepTalkingTrigger').onclick=()=>host.classList.toggle('open');
-    host.querySelectorAll('[data-keep-talking]').forEach(b=>b.onclick=()=>openLibraryPhrase(suggestions[+b.dataset.keepTalking]));
+    host.querySelectorAll('[data-keep-talking]').forEach(b=>b.onclick=()=>{const item=suggestions[+b.dataset.keepTalking];if(item?._generated)return useEnglishSuggestion(item.english);openLibraryPhrase(item,true)});
   }
 
   window.BOLNA_KEEP_TALKING={CONVERSATION_GRAPH,ROUGH_ROUTES,resolveRoughSource,getConversationState,resolveGraphSuggestions,getSuggestionQueries,resolveSuggestions};

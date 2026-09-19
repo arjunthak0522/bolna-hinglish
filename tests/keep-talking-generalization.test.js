@@ -214,6 +214,7 @@ for(const required of [
 
 assert(runtime.includes('Conversation so far (same user, oldest to newest)'), 'conversation-history prompt is missing');
 assert(runtime.includes('conversationTrail=prior'), 'follow-up history is not retained after a tap');
-assert(runtime.includes('useEnglishSuggestion(item.english)'), 'generated next turns are not actionable');
+const keepTalking=fs.readFileSync('keep-talking.js','utf8');
+assert(keepTalking.includes('useEnglishSuggestion(item.english)'), 'generated next turns are not actionable');
 
 console.log(`Universal Keep Talking generalization contract PASS: ${unseen.length} unseen scenarios, no phrase-by-phrase dependency`);

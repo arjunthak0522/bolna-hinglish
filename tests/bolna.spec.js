@@ -8,6 +8,13 @@ const core = {
   speechText: 'Bhaiya, bas yahin rok dena.',
   confidence: 0.98,
   phoneticConfidence: 'high',
+  nextSuggestions: [
+    'Do you want anything from the frozen section?',
+    'Should I get snacks too?',
+    'Do you need anything for breakfast?',
+    'Do you want me to send you a photo?',
+    'Is there anything else you need?',
+  ],
 };
 const enrich = {
   moreHindi: 'Bhaiya, bas yahin gaadi rok dena.',
@@ -120,6 +127,29 @@ test('details keep pronunciation, meaning, polite, casual, More Hindi and breakd
   await expect(page.getByText(enrich.moreHindi)).toBeVisible();
   await page.getByRole('button', { name: 'Break it down' }).click();
   await expect(page.locator('.wordRow small')).toContainText('BHAI-yaa');
+});
+
+test('Keep Talking uses contextual model suggestions for arbitrary real conversations', async ({ page }) => {
+  const seen = await boot(page);
+  await typedPhrase(page, "What would you like from Trader Joe's?");
+  await page.getByRole('button', { name: /Keep talking/i }).click();
+
+  const choices = page.locator('[data-keep-talking]');
+  await expect(choices).toHaveCount(5);
+  await expect(choices.nth(0)).toContainText('frozen section');
+  await expect(choices.nth(1)).toContainText('snacks');
+  await expect(page.getByText('Please speak a little slower.')).toHaveCount(0);
+  await expect(page.getByText('Can you say that again?')).toHaveCount(0);
+  await expect(page.getByText('Please write it down for me.')).toHaveCount(0);
+
+  await choices.nth(0).click();
+  await expect(page.locator('.heard')).toContainText('Do you want anything from the frozen section?');
+  await expect(page.locator('.hinglish')).toBeVisible();
+
+  const generateRequests = seen.filter(x => x.operation === 'generate');
+  expect(generateRequests.length).toBeGreaterThanOrEqual(2);
+  expect(generateRequests.at(-1).prompt).toContain("What would you like from Trader Joe's?");
+  expect(generateRequests.at(-1).prompt).toContain('Do you want anything from the frozen section?');
 });
 
 for (const [name, failure, title] of [

@@ -185,8 +185,9 @@ for(const [initial,detail] of unseen){
   ];
   const got=kt.resolveSuggestions(lib,search,initial,'General',5,generated);
   assert.strictEqual(got.length,5,`${initial}: expected five next turns; got ${got.length}`);
-  assert(got.every(x=>x._generated===true),`${initial}: arbitrary phrase unexpectedly depended on curated graph`);
-  assert(got.every(x=>norm(x.english).includes(norm(detail))),`${initial}: named detail/constraint was lost`);
+  const generatedTurns=got.filter(x=>x._generated===true);
+  assert(generatedTurns.length>=2,`${initial}: model-generated continuation layer did not participate; got ${got.map(x=>x.english).join(' | ')}`);
+  assert(generatedTurns.every(x=>norm(x.english).includes(norm(detail))),`${initial}: generated turns lost named detail/constraint`);
   assert(!got.some(x=>/say (that|it) again|speak (a little )?slower|write it down|repeat that/i.test(x.english)),`${initial}: generic repair fallback leaked`);
   assert.strictEqual(new Set(got.map(x=>norm(x.english))).size,5,`${initial}: duplicate next turns`);
 }

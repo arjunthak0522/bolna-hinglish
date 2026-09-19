@@ -1,7 +1,7 @@
 name: Library Search V2 QA
 on:
   push:
-    branches: ["library-search-v2", "keep-talking-scenario-chains", "keep-talking-conversation-graph", "driver-househelp-library-expansion"]
+    branches: ["library-search-v2", "keep-talking-scenario-chains", "keep-talking-conversation-graph", "driver-househelp-library-expansion", "keep-talking-smart-fallback"]
     paths: [".library-search-v2-trigger"]
 permissions:
   contents: read
@@ -39,6 +39,7 @@ jobs:
           node --check tests/library-search-no-match.test.js
           node --check tests/keep-talking-chains.test.js
           node --check tests/driver-househelp-followups.test.js
+          node --check tests/keep-talking-smart-fallback.test.js
           node --check tests/keep-talking.spec.js
       - name: Verify durable production voice architecture untouched
         run: |
@@ -65,6 +66,7 @@ jobs:
           set -o pipefail
           node tests/keep-talking-chains.test.js 2>&1 | tee chain-output.log
           node tests/driver-househelp-followups.test.js 2>&1 | tee -a chain-output.log
+          node tests/keep-talking-smart-fallback.test.js 2>&1 | tee -a chain-output.log
       - name: Diagnose no-match query
         run: |
           node - <<'NODE'

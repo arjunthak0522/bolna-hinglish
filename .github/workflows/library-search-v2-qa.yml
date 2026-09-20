@@ -41,6 +41,7 @@ jobs:
           node --check tests/driver-househelp-followups.test.js
           node --check tests/keep-talking-smart-fallback.test.js
           node --check tests/keep-talking-generalization.test.js
+          node --check tests/roman-script-only.test.js
           node --check tests/keep-talking.spec.js
       - name: Verify durable production voice architecture untouched
         run: |
@@ -62,6 +63,7 @@ jobs:
           node tests/library-search-driver-househelp.test.js
           node tests/library-search-no-match.test.js
           node tests/voice-context-isolation.test.js
+          node tests/roman-script-only.test.js
       - name: Keep Talking conversation-chain benchmark
         run: |
           set -o pipefail

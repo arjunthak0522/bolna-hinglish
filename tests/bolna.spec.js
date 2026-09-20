@@ -206,6 +206,28 @@ test('stale Devanagari Recent and Saved entries are purged automatically', async
   expect(JSON.stringify(cache)).not.toMatch(/[\u0900-\u097F]/u);
 });
 
+
+test('non-Latin model output is retried, not rendered or stored', async ({ page }) => {
+  const bad = {
+    ...core,
+    natural: 'Привет',
+    spokenForm: 'Привет',
+    speechText: 'Привет',
+  };
+  const seen = await boot(page, { generateOutputs: [bad, core] });
+  await typedPhrase(page, 'Say hello politely.');
+
+  const visible = await page.locator('body').innerText();
+  expect(visible).not.toContain('Привет');
+
+  const generateRequests = seen.filter(x => x.operation === 'generate');
+  expect(generateRequests).toHaveLength(2);
+  expect(generateRequests[1].prompt).toContain('non-Roman script');
+
+  const stored = await page.evaluate(() => localStorage.getItem('bolna_recent') || '');
+  expect(stored).not.toContain('Привет');
+});
+
 test('typed Devanagari is blocked because Bolna is Roman-script only', async ({ page }) => {
   await boot(page);
   await page.getByRole('button', { name: 'Type instead' }).click();

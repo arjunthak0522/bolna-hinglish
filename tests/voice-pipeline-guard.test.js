@@ -9,6 +9,6 @@ test('microphone flow must remain transcribe then generate, never voice_core',()
   assert.ok(start>=0&&end>start,'startListening block missing');
   const block=s.slice(start,end);
   assert.match(block,/transcript=await transcribe\(b(?:,speechWindow)?\)/);
-  assert.match(block,/const d=await generateCore\(transcript\)/);
+  assert.match(block,/const d=await generateCore\(transcript,conversationTrail\)/);
   assert.doesNotMatch(block,/await voiceCore\(b\)/);
 });

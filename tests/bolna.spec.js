@@ -1,6 +1,9 @@
 const { test, expect } = require('@playwright/test');
 
 const core = {
+  intendedEnglish: 'Please stop right here.',
+  intentStatus: 'resolved',
+  alternatives: [],
   natural: 'Bhaiya, bas yahin rok dena.',
   spokenForm: 'Bhaiya, bas yahin rok dena.',
   phonetic: 'BHAI-yaa, bus ya-HEE(n) rohk DAY-naa',
@@ -36,7 +39,13 @@ async function installApiMock(page, options = {}) {
     if (body.operation === 'transcribe') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: 'Please stop right here.' } }) });
     if (body.operation === 'generate') {
       const sequence = options.generateOutputs;
-      const output = Array.isArray(sequence) && sequence.length ? sequence[Math.min(generateIndex++, sequence.length - 1)] : core;
+      let output = Array.isArray(sequence) && sequence.length ? sequence[Math.min(generateIndex++, sequence.length - 1)] : core;
+      if (!(Array.isArray(sequence) && sequence.length)) {
+        const match = String(body.prompt || '').match(/User input: (\"(?:[^\"\\\\]|\\\\.)*\")/);
+        let intended = core.intendedEnglish;
+        if (match) { try { intended = JSON.parse(match[1]); } catch {} }
+        output = { ...core, intendedEnglish: intended };
+      }
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(output) } }) });
     }
     if (body.operation === 'enrich') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(enrich) } }) });
@@ -55,10 +64,9 @@ async function boot(page, options) {
 
 async function typedPhrase(page, text) {
   if (!(await page.locator('#typed').isVisible().catch(() => false))) {
-    await page.getByRole('button', { name: 'Type instead' }).click();
-  }
+    }
   await page.locator('#typed').fill(text);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.locator('.hinglish')).toBeVisible();
 }
 
@@ -230,11 +238,72 @@ test('non-Latin model output is retried, not rendered or stored', async ({ page 
 
 test('typed Devanagari is blocked because Bolna is Roman-script only', async ({ page }) => {
   await boot(page);
-  await page.getByRole('button', { name: 'Type instead' }).click();
   await page.locator('#typed').fill('\u0939\u093f\u0902\u0926\u0940');
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.getByText('Use Roman letters')).toBeVisible();
   await expect(page.locator('.hinglish')).toHaveCount(0);
+});
+
+
+test('typed input is first-class and shorthand uses the existing single generate call', async ({ page }) => {
+  const shorthand = {
+    ...core,
+    intendedEnglish: 'Please make me an omelette with chillis and onions.',
+    natural: 'Mere liye chillis aur onions ke saath omelette bana dijiye.',
+    spokenForm: 'Mere liye chillis aur onions ke saath omelette bana dijiye.',
+    speechText: 'Mere liye chillis aur onions ke saath omelette bana dijiye.',
+    meaning: 'Please make me an omelette with chillis and onions.',
+  };
+  const seen = await boot(page, { generateOutputs: [shorthand] });
+  await expect(page.locator('#typed')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Turn this into Hinglish' })).toBeVisible();
+  await page.locator('#typed').fill('omelette chillis onions');
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
+  await expect(page.locator('.heard')).toContainText('You meant');
+  await expect(page.locator('.heard')).toContainText(shorthand.intendedEnglish);
+  const generates = seen.filter(x => x.operation === 'generate');
+  expect(generates).toHaveLength(1);
+  expect(generates[0].prompt).toContain('infer the COMPLETE ENGLISH SENTENCE');
+  expect(generates[0].prompt).toContain('omelette chillis onions');
+});
+
+test('genuinely ambiguous shorthand surfaces likely interpretations', async ({ page }) => {
+  const ambiguous = {
+    ...core,
+    intendedEnglish: 'I need to go to the bank tomorrow.',
+    intentStatus: 'ambiguous',
+    alternatives: ['Can we stop at the bank tomorrow?', 'Is the bank open tomorrow?'],
+  };
+  await boot(page, { generateOutputs: [ambiguous] });
+  await page.locator('#typed').fill('bank tomorrow');
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
+  await expect(page.getByText('Did you mean')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'I need to go to the bank tomorrow.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Can we stop at the bank tomorrow?' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Is the bank open tomorrow?' })).toBeVisible();
+});
+
+test('resolved intent becomes history for a follow-up fragment', async ({ page }) => {
+  const first = { ...core, intendedEnglish: 'Please pick up my wife from the airport.' };
+  const second = { ...core, intendedEnglish: 'Please pick up my wife from the airport at 6 PM.' };
+  const seen = await boot(page, { generateOutputs: [first, second] });
+  await page.locator('#typed').fill('airport pickup wife');
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
+  await page.getByRole('button', { name: /Say something else/i }).click();
+  await page.locator('#typed').fill('6 pm');
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
+  const generates = seen.filter(x => x.operation === 'generate');
+  expect(generates).toHaveLength(2);
+  expect(generates[1].prompt).toContain('Please pick up my wife from the airport.');
+  expect(generates[1].prompt).toContain('6 pm');
+  await expect(page.locator('.heard')).toContainText('Please pick up my wife from the airport at 6 PM.');
+});
+
+test('complete English still goes through the same call without an added intent request', async ({ page }) => {
+  const seen = await boot(page);
+  await typedPhrase(page, 'Please stop right here.');
+  expect(seen.filter(x => x.operation === 'generate')).toHaveLength(1);
+  expect(seen.some(x => x.operation === 'enrich')).toBe(false);
 });
 
 for (const [name, failure, title] of [
@@ -245,9 +314,8 @@ for (const [name, failure, title] of [
 ]) {
   test(`recovers from ${name}`, async ({ page }) => {
     await boot(page, { failOperation: 'generate', failure });
-    await page.getByRole('button', { name: 'Type instead' }).click();
-    await page.locator('#typed').fill('Stop here.');
-    await page.getByRole('button', { name: 'Show me how to say it' }).click();
+      await page.locator('#typed').fill('Stop here.');
+    await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
     await expect(page.getByText(title)).toBeVisible();
     await expect(page.locator('#mic')).toBeVisible();
     await expect(page.locator('.micLabel')).toHaveText('Tap to speak');

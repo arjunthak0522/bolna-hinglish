@@ -23,6 +23,10 @@ const open=kt.resolveSuggestions(lib,search,"What would you like from Trader Joe
 assert.strictEqual(open.length,5,'arbitrary conversation should expose five contextual next turns');
 assert.deepStrictEqual(open.map(x=>x.english),trader);
 assert(open.every(x=>x._generated===true),'arbitrary next turns should be marked generated');
+const noLibrary=kt.resolveSuggestions([],null,"What would you like from Trader Joe's?",'General',5,trader);
+assert.strictEqual(noLibrary.length,5,'model-generated Keep Talking must not depend on phrase library availability');
+assert(noLibrary.every(x=>x._generated===true),'empty-library fallback must remain fully model-generated');
+
 assert(!open.some(x=>/speak.*slower|say.*again|write.*down/i.test(x.english)),'generic repair phrases leaked into arbitrary conversation');
 
 const noisy=kt.resolveSuggestions(lib,search,"What would you like from Trader Joe's?",'General',5,[

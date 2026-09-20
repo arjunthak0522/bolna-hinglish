@@ -27,13 +27,18 @@ function pcmBase64() { return Buffer.alloc(4800).toString('base64'); }
 
 async function installApiMock(page, options = {}) {
   const seen = [];
+  let generateIndex = 0;
   await page.route('https://hinglish-companion.vercel.app/api/gemini', async route => {
     const body = JSON.parse(route.request().postData() || '{}');
     seen.push(body);
     const failure = options.failOperation === body.operation ? options.failure : null;
     if (failure) return route.fulfill({ status: failure.status, contentType: 'application/json', body: JSON.stringify({ ok: false, category: failure.category }) });
     if (body.operation === 'transcribe') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: 'Please stop right here.' } }) });
-    if (body.operation === 'generate') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(core) } }) });
+    if (body.operation === 'generate') {
+      const sequence = options.generateOutputs;
+      const output = Array.isArray(sequence) && sequence.length ? sequence[Math.min(generateIndex++, sequence.length - 1)] : core;
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(output) } }) });
+    }
     if (body.operation === 'enrich') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify(enrich) } }) });
     if (body.operation === 'tts') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_audio: { data: pcmBase64(), mime_type: 'audio/pcm' } } }) });
     return route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ ok: false, category: 'invalid_client_request' }) });
@@ -150,6 +155,64 @@ test('Keep Talking uses contextual model suggestions for arbitrary real conversa
   expect(generateRequests.length).toBeGreaterThanOrEqual(2);
   expect(generateRequests.at(-1).prompt).toContain("What would you like from Trader Joe's?");
   expect(generateRequests.at(-1).prompt).toContain('Do you want anything from the frozen section?');
+});
+
+test('Roman-only guard retries bad model output before anything is rendered or stored', async ({ page }) => {
+  const bad = {
+    ...core,
+    natural: '\u0938\u0941\u0928\u093f\u090f \u0938\u0930',
+    spokenForm: '\u0938\u0941\u0928\u093f\u090f \u0938\u0930',
+    speechText: '\u0938\u0941\u0928\u093f\u090f \u0938\u0930',
+  };
+  const seen = await boot(page, { generateOutputs: [bad, core] });
+  await typedPhrase(page, "What would you like from Trader Joe's?");
+
+  const visible = await page.locator('body').innerText();
+  expect(visible).not.toMatch(/[\u0900-\u097F]/u);
+
+  const generateRequests = seen.filter(x => x.operation === 'generate');
+  expect(generateRequests).toHaveLength(2);
+  expect(generateRequests[1].prompt).toContain('STRICT RETRY');
+
+  const stored = await page.evaluate(() => localStorage.getItem('bolna_recent') || '');
+  expect(stored).not.toMatch(/[\u0900-\u097F]/u);
+});
+
+test('stale Devanagari Recent and Saved entries are purged automatically', async ({ page }) => {
+  await installApiMock(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('bolna_recent', JSON.stringify([
+      { natural: '\u0939\u093f\u0902\u0926\u0940', english: 'bad cached phrase', context: 'General' },
+      { natural: 'Roman only', english: 'good cached phrase', context: 'General' },
+    ]));
+    localStorage.setItem('bolna_saved', JSON.stringify([
+      { natural: '\u0928\u092e\u0938\u094d\u0924\u0947', english: 'bad saved phrase', context: 'General' },
+      { natural: 'Namaste', english: 'good saved phrase', context: 'General' },
+    ]));
+  });
+  await page.goto('/');
+  await expect(page.locator('.brand')).toHaveText('bolna');
+
+  const visible = await page.locator('body').innerText();
+  expect(visible).not.toMatch(/[\u0900-\u097F]/u);
+  await expect(page.getByText('Roman only')).toBeVisible();
+
+  const cache = await page.evaluate(() => ({
+    recent: JSON.parse(localStorage.getItem('bolna_recent') || '[]'),
+    saved: JSON.parse(localStorage.getItem('bolna_saved') || '[]'),
+  }));
+  expect(cache.recent).toHaveLength(1);
+  expect(cache.saved).toHaveLength(1);
+  expect(JSON.stringify(cache)).not.toMatch(/[\u0900-\u097F]/u);
+});
+
+test('typed Devanagari is blocked because Bolna is Roman-script only', async ({ page }) => {
+  await boot(page);
+  await page.getByRole('button', { name: 'Type instead' }).click();
+  await page.locator('#typed').fill('\u0939\u093f\u0902\u0926\u0940');
+  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await expect(page.getByText('Use Roman letters')).toBeVisible();
+  await expect(page.locator('.hinglish')).toHaveCount(0);
 });
 
 for (const [name, failure, title] of [

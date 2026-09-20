@@ -91,7 +91,7 @@ test('invalid PCM is rejected cleanly', async ({ page }) => {
   await expect(page.locator('.hinglish')).toBeVisible();
 });
 
-test('decodeAudioData failure is a playback problem, not a frozen app', async ({ page }) => {
+test('decodeAudioData failure falls back to native HTML audio instead of losing playback', async ({ page }) => {
   const pcm = Buffer.alloc(4800).toString('base64');
   await routeApi(page, (route, body) => {
     if (body.operation === 'generate') return ok(route, { output_text: JSON.stringify(core) });
@@ -103,10 +103,13 @@ test('decodeAudioData failure is a playback problem, not a frozen app', async ({
   await page.evaluate(() => {
     unlockPlayback();
     playbackCtx.decodeAudioData = async () => { throw new Error('injected decode failure'); };
+    window.__htmlFallbackUsed = false;
+    window.playBlobHtml = playBlobHtml = async () => { window.__htmlFallbackUsed = true; };
   });
   await page.getByRole('button', { name: /Hear it/i }).click();
-  await expect(page.getByText(/generated audio could not be decoded/)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__htmlFallbackUsed)).toBe(true);
   await expect(page.getByRole('button', { name: /Say something else/i })).toBeVisible();
+  await expect(page.locator('.inlineError')).toHaveCount(0);
 });
 
 test('suspended AudioContext is resumed before playback attempt', async ({ page }) => {
@@ -128,6 +131,44 @@ test('suspended AudioContext is resumed before playback attempt', async ({ page 
     return called;
   });
   expect(resumed).toBe(true);
+});
+
+test('speech-window normalization removes dead air before transcription upload', async ({ page }) => {
+  await routeApi(page, (route, body) => ok(route, {}));
+  await page.goto('/');
+  const sizes = await page.evaluate(async () => {
+    const source = encodeWavFromFloat(new Float32Array(16000 * 4), 16000);
+    const full = await normalizeRecording(source);
+    const trimmed = await normalizeRecording(source, { startMs: 1000, endMs: 2200 });
+    return { full: full.size, trimmed: trimmed.size };
+  });
+  expect(sizes.trimmed).toBeLessThan(sizes.full * 0.5);
+});
+
+test('Hear it remains tappable while TTS prefetch is still in flight', async ({ page }) => {
+  const pcm = Buffer.alloc(4800).toString('base64');
+  await routeApi(page, async (route, body) => {
+    if (body.operation === 'generate') return ok(route, { output_text: JSON.stringify(core) });
+    if (body.operation === 'tts') {
+      await new Promise(r => setTimeout(r, 1500));
+      return ok(route, { output_audio: { data: pcm, mime_type: 'audio/pcm' } });
+    }
+    return ok(route, {});
+  });
+  await openTyped(page);
+  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  const hear = page.getByRole('button', { name: /Hear it/i });
+  await expect(hear).toBeEnabled();
+});
+
+test('voice latency guard keeps post-speech VAD wait at or below 500ms', async ({ page }) => {
+  await routeApi(page, (route, body) => ok(route, {}));
+  await page.goto('/');
+  const runtime = await page.evaluate(async () => (await fetch('./app-runtime.js')).text());
+  expect(runtime).toContain('now-lastVoice>500');
+  expect(runtime).not.toContain('now-lastVoice>700');
+  expect(runtime).toContain('speechAt-startAt-180');
+  expect(runtime).toContain('lastVoice-startAt+220');
 });
 
 test('backend error leaves UI retryable rather than stale', async ({ page }) => {

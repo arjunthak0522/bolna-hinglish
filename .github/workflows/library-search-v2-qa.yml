@@ -46,7 +46,7 @@ jobs:
       - name: Verify durable production voice architecture untouched
         run: |
           node --test tests/voice-pipeline-guard.test.js tests/voice-context-isolation.test.js
-          grep -q "transcript=await transcribe(b)" app-runtime.js
+          grep -Eq "transcript=await transcribe\\(b(,speechWindow)?\\)" app-runtime.js
           grep -q "const d=await generateCore(transcript)" app-runtime.js
           if sed -n '/async function startListening()/,/async function submitTyped()/p' app-runtime.js | grep -q 'await voiceCore(b)'; then
             echo 'Forbidden voice_core microphone path found'

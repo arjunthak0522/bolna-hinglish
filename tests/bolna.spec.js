@@ -63,8 +63,7 @@ async function boot(page, options) {
 }
 
 async function typedPhrase(page, text) {
-  if (!(await page.locator('#typed').isVisible().catch(() => false))) {
-    }
+  await expect(page.locator('#typed')).toBeVisible();
   await page.locator('#typed').fill(text);
   await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.locator('.hinglish')).toBeVisible();
@@ -277,7 +276,8 @@ test('genuinely ambiguous shorthand surfaces likely interpretations', async ({ p
   await boot(page, { generateOutputs: [ambiguous] });
   await page.locator('#typed').fill('bank tomorrow');
   await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
-  await expect(page.getByText('Did you mean')).toBeVisible();
+  await expect(page.getByText('What did you mean?')).toBeVisible();
+  await expect(page.locator('.hinglish')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'I need to go to the bank tomorrow.' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Can we stop at the bank tomorrow?' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Is the bank open tomorrow?' })).toBeVisible();
@@ -314,7 +314,7 @@ for (const [name, failure, title] of [
 ]) {
   test(`recovers from ${name}`, async ({ page }) => {
     await boot(page, { failOperation: 'generate', failure });
-      await page.locator('#typed').fill('Stop here.');
+    await page.locator('#typed').fill('Stop here.');
     await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
     await expect(page.getByText(title)).toBeVisible();
     await expect(page.locator('#mic')).toBeVisible();

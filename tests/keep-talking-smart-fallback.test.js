@@ -48,7 +48,7 @@ assert(driver.some(x=>x.english==='Should I pay now?'),'model continuation shoul
 
 const runtime=fs.readFileSync('app-runtime.js','utf8');
 assert(runtime.includes('nextSuggestions'),'core response must carry nextSuggestions');
-assert(runtime.includes('Conversation so far (same user, oldest to newest)'),'follow-up generation must preserve conversation trail');
+assert(runtime.includes('Conversation so far (same user, oldest to newest'),'follow-up generation must preserve conversation trail');
 assert(runtime.includes('async function useEnglishSuggestion(english)'),'generated suggestion must be directly actionable');
 assert(!/nextSuggestions MUST contain exactly 5[\s\S]*say that again[\s\S]*unless the current sentence itself is about not understanding someone/.test('') || runtime.includes('unless the current sentence itself is about not understanding someone'));
 

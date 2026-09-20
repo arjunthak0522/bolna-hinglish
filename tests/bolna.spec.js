@@ -37,6 +37,12 @@ async function installApiMock(page, options = {}) {
     const failure = options.failOperation === body.operation ? options.failure : null;
     if (failure) return route.fulfill({ status: failure.status, contentType: 'application/json', body: JSON.stringify({ ok: false, category: failure.category }) });
     if (body.operation === 'transcribe') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: 'Please stop right here.' } }) });
+    if (body.operation === 'suggest') {
+      const suggestions = Array.isArray(options.suggestOutputs) && options.suggestOutputs.length
+        ? options.suggestOutputs
+        : ['Please come tomorrow at 8.', 'Please come tomorrow morning.', 'Can you come tomorrow?', 'What time can you come tomorrow?'];
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { output_text: JSON.stringify({ suggestions }) } }) });
+    }
     if (body.operation === 'generate') {
       const sequence = options.generateOutputs;
       let output = Array.isArray(sequence) && sequence.length ? sequence[Math.min(generateIndex++, sequence.length - 1)] : core;
@@ -243,6 +249,30 @@ test('typed Devanagari is blocked because Bolna is Roman-script only', async ({ 
   await expect(page.locator('.hinglish')).toHaveCount(0);
 });
 
+
+test('opening Bolna does not start predictive or Gemini work', async ({ page }) => {
+  const seen = await boot(page);
+  await page.waitForTimeout(800);
+  expect(seen).toHaveLength(0);
+});
+
+test('typing rough intent shows predictive suggestions and tapping one uses it', async ({ page }) => {
+  const seen = await boot(page, {
+    suggestOutputs: [
+      'Please come tomorrow at 8.',
+      'Please pick me up tomorrow at 8.',
+      'Can you come tomorrow at 8?',
+      'Please call me tomorrow at 8.',
+    ],
+  });
+  await page.locator('#typed').fill('driver tomorrow 8');
+  await expect(page.locator('.intentSuggestions')).toBeVisible({ timeout: 2500 });
+  await expect(page.getByRole('button', { name: 'Please come tomorrow at 8. ↗' })).toBeVisible();
+  await page.getByRole('button', { name: 'Please come tomorrow at 8. ↗' }).click();
+  await expect(page.locator('.hinglish')).toBeVisible();
+  expect(seen.some(x => x.operation === 'suggest')).toBe(true);
+  expect(seen.filter(x => x.operation === 'generate')).toHaveLength(1);
+});
 
 test('typed input is first-class and shorthand uses the existing single generate call', async ({ page }) => {
   const shorthand = {

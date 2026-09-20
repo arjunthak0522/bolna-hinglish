@@ -169,15 +169,18 @@
   }
 
   function resolveSuggestions(library,engine,english,ctx,limit=5,generated=[]){
-    if(!Array.isArray(library)||!library.length)return[];
-    const out=[],seen=new Set(),current=norm(english);
+    const usableLibrary=Array.isArray(library)?library:[],out=[],seen=new Set(),current=norm(english);
+    const generatedItems=generatedSuggestionItems(generated,english,ctx);
     const add=item=>{const key=norm(item?.english);if(!item||!key||key===current||seen.has(key)||out.length>=limit)return;seen.add(key);out.push(item)};
-    for(const item of resolveGraphSuggestions(library,english,limit))add(item);
-    for(const item of generatedSuggestionItems(generated,english,ctx))add(item);
+    if(usableLibrary.length){
+      const graphLimit=generatedItems.length?Math.min(limit,3):limit;
+      for(const item of resolveGraphSuggestions(usableLibrary,english,graphLimit))add(item);
+    }
+    for(const item of generatedItems)add(item);
     if(out.length)return out.slice(0,limit);
-    if(getConversationState(english).scenario!=='communication-repair'||!engine?.rank)return[];
+    if(!usableLibrary.length||getConversationState(english).scenario!=='communication-repair'||!engine?.rank)return[];
     for(const query of FALLBACK){
-      const ranked=engine.rank(library,query,'All')||[];
+      const ranked=engine.rank(usableLibrary,query,'All')||[];
       const item=ranked.map(r=>r.item).find(x=>x&&norm(x.english)!==current&&!seen.has(norm(x.english)));
       add(item);
     }

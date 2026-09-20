@@ -127,12 +127,24 @@ function providerRequest(body) {
       },
     };
   }
-  if (body.operation === 'generate' || body.operation === 'enrich') {
+  if (body.operation === 'generate') {
+    return {
+      timeoutMs: 7000,
+      retryTimeoutMs: 7000,
+      request: {
+        model: MODELS.generate,
+        input: body.prompt,
+        generation_config: { thinking_level: 'minimal' },
+        ...(body.schema ? { response_format: { type: 'text', mime_type: 'application/json', schema: body.schema } } : {}),
+      },
+    };
+  }
+  if (body.operation === 'enrich') {
     return {
       timeoutMs: 15000,
       retryTimeoutMs: 0,
       request: {
-        model: MODELS[body.operation],
+        model: MODELS.enrich,
         input: body.prompt,
         generation_config: { thinking_level: 'minimal' },
         ...(body.schema ? { response_format: { type: 'text', mime_type: 'application/json', schema: body.schema } } : {}),

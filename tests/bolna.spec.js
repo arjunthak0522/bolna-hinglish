@@ -256,6 +256,28 @@ test('opening Bolna does not start predictive or Gemini work', async ({ page }) 
   expect(seen).toHaveLength(0);
 });
 
+test('predictive suggestions stay conversational instead of becoming search autocomplete', async ({ page }) => {
+  await boot(page, {
+    suggestOutputs: [
+      'Gym membership cost in my area',
+      'Gym membership cost comparison',
+      'Gym membership cost per month',
+      'How much is the monthly gym membership?',
+      'Is there a joining fee for the gym?',
+      'How much will the repair cost?',
+    ],
+  });
+  await page.locator('#typed').fill('Gym membership cost');
+  await expect(page.locator('.intentSuggestions')).toBeVisible({ timeout: 2500 });
+  const text = await page.locator('.intentSuggestions').innerText();
+  expect(text).toContain('How much is the monthly gym membership?');
+  expect(text).toContain('Is there a joining fee for the gym?');
+  expect(text).not.toContain('in my area');
+  expect(text).not.toContain('cost comparison');
+  expect(text).not.toContain('cost per month');
+  expect(text).not.toContain('repair cost');
+});
+
 test('typing rough intent shows predictive suggestions and tapping one uses it', async ({ page }) => {
   const seen = await boot(page, {
     suggestOutputs: [

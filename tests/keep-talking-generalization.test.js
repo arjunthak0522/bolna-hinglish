@@ -205,14 +205,16 @@ const promptEnd=runtime.indexOf('function enrichPrompt(',promptStart);
 const promptBlock=runtime.slice(promptStart,promptEnd);
 for(const required of [
   'nextSuggestions MUST contain exactly 5',
-  'Infer the situation from the English input even when Context is General',
+  'First infer the COMPLETE ENGLISH SENTENCE',
+  'Use recent resolved conversation history',
+  'Preserve names, places, times, quantities, negation, constraints, and service roles exactly',
   'Preserve named places, people, items, times, quantities and choices already mentioned',
   'Do not contradict them',
   'Do not invent arbitrary specifics',
   'Never use generic communication-repair suggestions'
 ]) assert(promptBlock.includes(required),`universal prompt contract missing: ${required}`);
 
-assert(runtime.includes('Conversation so far (same user, oldest to newest)'), 'conversation-history prompt is missing');
+assert(runtime.includes('Conversation so far (same user, oldest to newest'), 'conversation-history prompt is missing');
 assert(runtime.includes('conversationTrail=prior'), 'follow-up history is not retained after a tap');
 const keepTalking=fs.readFileSync('keep-talking.js','utf8');
 assert(keepTalking.includes('useEnglishSuggestion(item.english)'), 'generated next turns are not actionable');

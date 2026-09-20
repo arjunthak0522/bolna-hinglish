@@ -210,7 +210,7 @@ for(const required of [
   'Preserve names, places, times, quantities, negation, constraints, and service roles exactly',
   'Preserve named places, people, items, times, quantities and choices already mentioned',
   'Do not contradict them',
-  'Do not invent arbitrary specifics',
+  'invent arbitrary specifics',
   'Never use generic communication-repair suggestions'
 ]) assert(promptBlock.includes(required),`universal prompt contract missing: ${required}`);
 

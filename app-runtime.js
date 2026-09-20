@@ -100,26 +100,61 @@ async function provider(operation,payload={},timeoutMs=20000){
 }
 
 function outText(x){if(x?.output_text)return x.output_text.trim();const a=[];for(const s of x?.steps||[])for(const c of s?.content||[])if(c.type==='text')a.push(c.text);return a.join('').trim()}
-function suggestionPrompt(query){const prior=conversationTrail.filter(Boolean).slice(-3);return `You are Bolna's predictive autocomplete for an American English speaker living in India.
-Typed text: ${JSON.stringify(query)}
-Talking to: ${JSON.stringify(context)}
+function suggestionPrompt(query){const prior=conversationTrail.filter(Boolean).slice(-3);return `You are Bolna's predictive spoken-intent completer for an American English speaker living in India.
+Typed fragment: ${JSON.stringify(query)}
+Selected conversation context: ${JSON.stringify(context)}
 Recent intended conversation: ${JSON.stringify(prior)}
-Predict the 4 most likely COMPLETE English sentences the user intends to say next.
-The typed text may be a prefix, shorthand, fragments, nouns, misspellings, names, places, times, quantities, or service context.
-Preserve every explicit name, place, time, quantity, negation, and constraint.
-Prefer practical everyday intents that fit the current conversation and who the user is talking to.
+
+Your job is NOT web search autocomplete. Predict what the user is trying to SAY OUT LOUD to another person.
+Return the 4 most likely COMPLETE, natural English utterances the user might actually speak next.
+
+Hard rules:
+- Every suggestion must be directly speakable as a real question, request, statement, or instruction to another person.
+- NEVER return search-engine phrases, topic labels, research queries, or noun-only completions.
+- Do not output phrases like "in my area", "comparison", "best", "reviews", "near me", or SEO-style completions unless the user's fragment explicitly requires that meaning. Even then, rewrite it as something a person would naturally say aloud.
+- Preserve the core subject and at least the important nouns from the fragment. Do not drift to a different subject just because one generic word overlaps.
+- Preserve every explicit name, place, time, quantity, negation, and constraint.
+- Infer the likely real-world situation and person being addressed even when Selected conversation context is General.
+- The 4 choices should represent plausible nearby intents, not four cosmetic rewrites of the same sentence.
+- Prefer concise everyday speech.
+
+Example:
+Typed fragment: "gym membership cost"
+GOOD:
+"How much is the monthly gym membership?"
+"How much is the annual gym membership?"
+"Is there a joining fee for the gym?"
+"Can you show me the gym membership options?"
+BAD:
+"Gym membership cost in my area"
+"Gym membership cost comparison"
+"Gym membership cost per month"
+
+Example:
+Typed fragment: "driver tomorrow 8"
+GOOD:
+"Please come tomorrow at 8."
+"Can you pick me up tomorrow at 8?"
+"Are you available tomorrow at 8?"
+"Please be here by 8 tomorrow."
+
 Do not translate to Hinglish yet. Do not explain. Roman/Latin letters only.
 Return only the requested JSON.`}
 
-function localIntentSuggestions(query){const q=String(query||'').trim();if(q.length<2)return[];const engine=window.BOLNA_LIBRARY_SEARCH;if(!engine)return[];const personal=[...recent(),...saved()].map(x=>({english:x.english||'',context:x.context||'General',category:'Recent',search:x.natural||''}));const ranked=engine.rank([...personal,...phraseLibrary],q,'All').map(x=>x.item).filter(x=>x?.english);const sameContext=ranked.filter(x=>!x.context||x.context===context),other=ranked.filter(x=>x.context&&x.context!==context);return [...sameContext,...other].map(x=>x.english.trim()).filter((x,i,a)=>x&&x.toLowerCase()!==q.toLowerCase()&&a.indexOf(x)===i).slice(0,4)}
+const predictionGenericWords=new Set(['a','an','the','i','you','we','they','he','she','it','this','that','my','your','our','to','for','of','in','on','at','and','or','please','want','need','cost','costs','price','prices','how','much']);
+function predictionTokens(value){const engine=window.BOLNA_LIBRARY_SEARCH;const normalized=engine?engine.normalize(value):String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();return normalized.split(' ').filter(Boolean)}
+function looksLikeSpokenUtterance(value){return /^(please|can|could|would|will|do|does|did|is|are|am|was|were|how|what|when|where|why|which|who|should|may|have|has|i|we|you|tell|ask|let|give|make|bring|come|pick|take|send|call|wait|stop|use|add|remove|leave|turn|keep|show|book|reserve|put|open|close|pay|check)\b/i.test(String(value||'').trim())}
+function isGoodSpokenPrediction(query,value){const q=String(query||'').trim(),s=String(value||'').trim();if(!s||hasNonRomanScript(s)||s.toLowerCase()===q.toLowerCase())return false;if(!looksLikeSpokenUtterance(s))return false;const lower=s.toLowerCase(),qLower=q.toLowerCase();for(const phrase of ['in my area','cost comparison','price comparison','best gyms','reviews','near me'])if(lower.includes(phrase)&&!qLower.includes(phrase))return false;const anchors=predictionTokens(q).filter(x=>!predictionGenericWords.has(x));if(!anchors.length)return true;const candidate=predictionTokens(s);const matched=anchors.filter(a=>candidate.some(b=>a===b||(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a)))));return matched.length>=Math.min(2,anchors.length)}
 
-function paintIntentSuggestions(values){suggestionValues=[...new Set((values||[]).map(x=>String(x||'').trim()).filter(x=>x&&!hasNonRomanScript(x)))].slice(0,5);const host=document.getElementById('intentSuggestions');if(!host)return;if(!suggestionValues.length){host.hidden=true;host.innerHTML='';return}host.hidden=false;host.innerHTML=suggestionValues.map((x,i)=>`<button type="button" data-predictive="${i}"><span>${esc(x)}</span><b>↗</b></button>`).join('');host.querySelectorAll('[data-predictive]').forEach(b=>b.onclick=()=>usePredictiveSuggestion(suggestionValues[+b.dataset.predictive]))}
+function localIntentSuggestions(query){const q=String(query||'').trim();if(q.length<2)return[];const engine=window.BOLNA_LIBRARY_SEARCH;if(!engine)return[];const personal=[...recent(),...saved()].map(x=>({english:x.english||'',context:x.context||'General',category:'Recent',search:x.natural||''}));const ranked=engine.rank([...personal,...phraseLibrary],q,'All').filter(x=>x?.item?.english&&x.score>=28);const sameContext=ranked.filter(x=>!x.item.context||x.item.context===context),other=ranked.filter(x=>x.item.context&&x.item.context!==context);return [...sameContext,...other].map(x=>x.item.english.trim()).filter((x,i,a)=>isGoodSpokenPrediction(q,x)&&a.indexOf(x)===i).slice(0,3)}
+
+function paintIntentSuggestions(values){suggestionValues=[...new Set((values||[]).map(x=>String(x||'').trim()).filter(x=>x&&!hasNonRomanScript(x)))].slice(0,4);const host=document.getElementById('intentSuggestions');if(!host)return;if(!suggestionValues.length){host.hidden=true;host.innerHTML='';return}host.hidden=false;host.innerHTML=suggestionValues.map((x,i)=>`<button type="button" data-predictive="${i}"><span>${esc(x)}</span><b>↗</b></button>`).join('');host.querySelectorAll('[data-predictive]').forEach(b=>b.onclick=()=>usePredictiveSuggestion(suggestionValues[+b.dataset.predictive]))}
 
 function cancelPredictions(){if(suggestionTimer)clearTimeout(suggestionTimer);suggestionTimer=null;suggestionSeq++;paintIntentSuggestions([])}
 
-async function fetchPredictiveSuggestions(query,seq){try{const raw=await provider('suggest',{prompt:suggestionPrompt(query),schema:suggestSchema},5000);if(seq!==suggestionSeq)return[];let parsed=null;try{parsed=JSON.parse(outText(raw))}catch{return[]}const rows=Array.isArray(parsed?.suggestions)?parsed.suggestions:[];return rows.map(x=>String(x||'').trim()).filter(x=>x&&!hasNonRomanScript(x))}catch{return[]}}
+async function fetchPredictiveSuggestions(query,seq){try{const raw=await provider('suggest',{prompt:suggestionPrompt(query),schema:suggestSchema},5000);if(seq!==suggestionSeq)return[];let parsed=null;try{parsed=JSON.parse(outText(raw))}catch{return[]}const rows=Array.isArray(parsed?.suggestions)?parsed.suggestions:[];return rows.map(x=>String(x||'').trim()).filter(x=>isGoodSpokenPrediction(query,x))}catch{return[]}}
 
-function schedulePredictions(value){if(suggestionTimer)clearTimeout(suggestionTimer);suggestionTimer=null;const q=String(value||'').trim(),seq=++suggestionSeq;if(q.length<2||hasNonRomanScript(q)){paintIntentSuggestions([]);return}const local=localIntentSuggestions(q);paintIntentSuggestions(local);if(q.length<3)return;suggestionTimer=setTimeout(async()=>{const remote=await fetchPredictiveSuggestions(q,seq);if(seq!==suggestionSeq)return;paintIntentSuggestions([...remote,...local])},500)}
+function schedulePredictions(value){if(suggestionTimer)clearTimeout(suggestionTimer);suggestionTimer=null;const q=String(value||'').trim(),seq=++suggestionSeq;if(q.length<2||hasNonRomanScript(q)){paintIntentSuggestions([]);return}const local=localIntentSuggestions(q);paintIntentSuggestions(local);if(q.length<3)return;suggestionTimer=setTimeout(async()=>{const remote=await fetchPredictiveSuggestions(q,seq);if(seq!==suggestionSeq)return;paintIntentSuggestions(remote.length>=3?remote:[...remote,...local])},500)}
 
 function usePredictiveSuggestion(value){const typed=document.getElementById('typed');if(!typed||!value)return;typed.value=value;cancelPredictions();submitTyped()}
 

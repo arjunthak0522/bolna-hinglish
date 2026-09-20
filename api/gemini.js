@@ -19,6 +19,7 @@ const LIMITS = Object.freeze({
 
 const MODELS = Object.freeze({
   transcribe: 'gemini-3.5-flash-lite',
+  suggest: 'gemini-3.5-flash-lite',
   generate: 'gemini-3.5-flash-lite',
   enrich: 'gemini-3.5-flash-lite',
   tts: 'gemini-3.1-flash-tts-preview',
@@ -70,7 +71,7 @@ async function callGemini(apiKey, body, timeoutMs) {
 
 function validateOperation(body) {
   if (!body || typeof body !== 'object') return 'Request body must be JSON.';
-  if (!['voice_core', 'transcribe', 'generate', 'enrich', 'tts'].includes(body.operation)) return 'Unsupported operation.';
+  if (!['voice_core', 'transcribe', 'suggest', 'generate', 'enrich', 'tts'].includes(body.operation)) return 'Unsupported operation.';
 
   if (body.operation === 'voice_core' || body.operation === 'transcribe') {
     if (typeof body.audioData !== 'string' || !body.audioData) return 'audioData is required.';
@@ -83,7 +84,7 @@ function validateOperation(body) {
     if (body.audioData.length > LIMITS.audioBase64Chars) return 'Recording is too large.';
   }
 
-  if (body.operation === 'generate' || body.operation === 'enrich') {
+  if (body.operation === 'suggest' || body.operation === 'generate' || body.operation === 'enrich') {
     if (typeof body.prompt !== 'string' || !body.prompt.trim()) return 'prompt is required.';
     if (body.prompt.length > LIMITS.promptChars) return 'Prompt is too large.';
     if (body.schema && JSON.stringify(body.schema).length > LIMITS.schemaChars) return 'Schema is too large.';
@@ -124,6 +125,18 @@ function providerRequest(body) {
           { type: 'audio', data: body.audioData, mime_type: 'audio/wav' },
         ],
         generation_config: { thinking_level: 'minimal' },
+      },
+    };
+  }
+  if (body.operation === 'suggest') {
+    return {
+      timeoutMs: 4000,
+      retryTimeoutMs: 0,
+      request: {
+        model: MODELS.suggest,
+        input: body.prompt,
+        generation_config: { thinking_level: 'minimal' },
+        ...(body.schema ? { response_format: { type: 'text', mime_type: 'application/json', schema: body.schema } } : {}),
       },
     };
   }

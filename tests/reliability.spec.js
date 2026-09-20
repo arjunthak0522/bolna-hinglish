@@ -201,6 +201,31 @@ test('HTML audio priming cannot pause the real cached clip', async ({ page }) =>
   expect(result.pausesBeforeEnd).toBe(1);
 });
 
+test('stopping native fallback playback settles the pending playback promise', async ({ page }) => {
+  await routeApi(page, (route, body) => ok(route, {}));
+  await page.goto('/');
+  const settled = await page.evaluate(async () => {
+    const fake = {
+      volume: 1, src: '', currentTime: 0, preload: '', style: {},
+      setAttribute() {},
+      play() { return Promise.resolve(); },
+      pause() {},
+      onended: null,
+      onerror: null,
+    };
+    htmlAudio = fake;
+    htmlAudioPrimed = true;
+    htmlAudioPrimeToken = 0;
+    let resolved = false;
+    const p = playBlobHtml(new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'audio/wav' })).then(() => { resolved = true; });
+    await Promise.resolve();
+    stopPlayback();
+    await p;
+    return resolved;
+  });
+  expect(settled).toBe(true);
+});
+
 test('starting a new recording always stops existing playback first', async ({ page }) => {
   await routeApi(page, (route, body) => ok(route, {}));
   await page.goto('/');

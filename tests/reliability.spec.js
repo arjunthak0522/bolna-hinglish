@@ -171,6 +171,63 @@ test('voice latency guard keeps post-speech VAD wait at or below 500ms', async (
   expect(runtime).toContain('lastVoice-startAt+220');
 });
 
+test('HTML audio priming cannot pause the real cached clip', async ({ page }) => {
+  await routeApi(page, (route, body) => ok(route, {}));
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    let resolvePrime, plays = 0, pauses = 0;
+    const primePending = new Promise(resolve => { resolvePrime = resolve; });
+    const fake = {
+      volume: 1, src: '', currentTime: 0, preload: '', style: {},
+      setAttribute() {},
+      play() { plays++; return plays === 1 ? primePending : Promise.resolve(); },
+      pause() { pauses++; },
+      onended: null,
+      onerror: null,
+    };
+    htmlAudio = fake;
+    htmlAudioPrimed = false;
+    htmlAudioPrimeToken = 0;
+    primeHtmlAudio();
+    const actual = playBlobHtml(new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'audio/wav' }));
+    resolvePrime();
+    await Promise.resolve();
+    const pausesBeforeEnd = pauses;
+    fake.onended?.();
+    await actual;
+    return { pausesBeforeEnd, plays };
+  });
+  expect(result.plays).toBe(2);
+  expect(result.pausesBeforeEnd).toBe(1);
+});
+
+test('starting a new recording always stops existing playback first', async ({ page }) => {
+  await routeApi(page, (route, body) => ok(route, {}));
+  await page.goto('/');
+  const stopped = await page.evaluate(async () => {
+    let calls = 0;
+    stopPlayback = () => { calls++; };
+    getMicStream = async () => { throw new Error('injected mic stop'); };
+    await startListening();
+    return calls;
+  });
+  expect(stopped).toBe(1);
+});
+
+test('double tapping Hear it cannot start overlapping result playback', async ({ page }) => {
+  await routeApi(page, (route, body) => ok(route, {}));
+  await page.goto('/');
+  const calls = await page.evaluate(async () => {
+    result = { natural: 'Test', spokenForm: 'Test', phonetic: 'Test', meaning: 'Test' };
+    state = 'playing';
+    let n = 0;
+    speech = async () => { n++; return new Blob(); };
+    await playText('Test', false);
+    return n;
+  });
+  expect(calls).toBe(0);
+});
+
 test('backend error leaves UI retryable rather than stale', async ({ page }) => {
   let calls = 0;
   await routeApi(page, (route, body) => {

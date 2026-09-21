@@ -1,6 +1,9 @@
 const { test, expect } = require('@playwright/test');
 
 const core = {
+  intendedEnglish: 'Please stop right here.',
+  intentStatus: 'resolved',
+  alternatives: [],
   natural: 'Bhaiya, bas yahin rok dena.',
   spokenForm: 'Bhaiya, bas yahin rok dena.',
   phonetic: 'BHAI-yaa, bus ya-HEE(n) rohk DAY-naa',
@@ -8,6 +11,7 @@ const core = {
   speechText: 'Bhaiya, bas yahin rok dena.',
   confidence: 0.98,
   phoneticConfidence: 'high',
+  nextSuggestions: ['Please wait here.','Can you go a little further?','Take the next left.','Please follow Google Maps.','Thank you.'],
 };
 
 async function routeApi(page, handler) {
@@ -16,7 +20,7 @@ async function routeApi(page, handler) {
 
 async function openTyped(page) {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Type instead' }).click();
+  await expect(page.locator('#typed')).toBeVisible();
   await page.locator('#typed').fill('Stop here.');
 }
 
@@ -31,7 +35,7 @@ function fail(route, status, category) {
 test('empty generation returns to usable idle state', async ({ page }) => {
   await routeApi(page, (route, body) => body.operation === 'generate' ? ok(route, { output_text: '' }) : ok(route, {}));
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.getByText('Empty Gemini result')).toBeVisible();
   await expect(page.locator('#mic')).toBeVisible();
 });
@@ -45,7 +49,7 @@ test('client timeout returns to usable state', async ({ page }) => {
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.getByText('Gemini took too long')).toBeVisible({ timeout: 22000 });
   await expect(page.locator('#mic')).toBeVisible();
 });
@@ -68,7 +72,7 @@ test('empty TTS is classified without breaking result screen', async ({ page }) 
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   const audioButton = page.getByRole('button', { name: /Hear it|Retry audio/i });
   await expect(audioButton).toBeEnabled({ timeout: 5000 });
   await audioButton.click();
@@ -83,7 +87,7 @@ test('invalid PCM is rejected cleanly', async ({ page }) => {
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   const audioButton = page.getByRole('button', { name: /Hear it|Retry audio/i });
   await expect(audioButton).toBeEnabled({ timeout: 5000 });
   await audioButton.click();
@@ -99,7 +103,7 @@ test('decodeAudioData failure falls back to native HTML audio instead of losing 
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await page.evaluate(() => {
     unlockPlayback();
     playbackCtx.decodeAudioData = async () => { throw new Error('injected decode failure'); };
@@ -120,7 +124,7 @@ test('suspended AudioContext is resumed before playback attempt', async ({ page 
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   const resumed = await page.evaluate(async () => {
     const ctx = unlockPlayback();
     let called = false;
@@ -156,7 +160,7 @@ test('Hear it remains tappable while TTS prefetch is still in flight', async ({ 
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   const hear = page.getByRole('button', { name: /Hear it/i });
   await expect(hear).toBeEnabled();
 });
@@ -261,9 +265,9 @@ test('backend error leaves UI retryable rather than stale', async ({ page }) => 
     return ok(route, {});
   });
   await openTyped(page);
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.getByText('Gemini is temporarily unavailable')).toBeVisible();
   await page.locator('#typed').fill('Stop here.');
-  await page.getByRole('button', { name: 'Show me how to say it' }).click();
+  await page.getByRole('button', { name: 'Turn this into Hinglish' }).click();
   await expect(page.locator('.hinglish')).toBeVisible();
 });

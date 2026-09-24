@@ -15,14 +15,14 @@ test('automatic context controller does not reset context during generation', as
   await page.route('https://hinglish-companion.vercel.app/api/gemini', async route => {
     const body=JSON.parse(route.request().postData()||'{}');
     seen.push(body);
-    if(body.operation==='generate')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,data:{output_text:JSON.stringify({natural:'Bill le aaiye.',spokenForm:'Bill le aaiye.',phonetic:'bill lay AA-ee-yay',meaning:'Can I get the bill?',speechText:'Bill le aaiye.',confidence:.98,phoneticConfidence:'high'})}})});
+    if(body.operation==='generate')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,data:{output_text:JSON.stringify({intendedEnglish:'Can I get the bill?',intentStatus:'resolved',alternatives:[],natural:'Bill le aaiye.',spokenForm:'Bill le aaiye.',phonetic:'bill lay AA-ee-yay',meaning:'Can I get the bill?',speechText:'Bill le aaiye.',confidence:.98,phoneticConfidence:'high',nextSuggestions:['Can I pay by card?','Can you split the bill?','Can I get a receipt?','Please pack this to go.','Thank you.']})}})});
     if(body.operation==='tts')return route.fulfill({status:429,contentType:'application/json',body:JSON.stringify({ok:false,category:'quota_exhausted'})});
     return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({ok:false,category:'invalid_client_request'})});
   });
   await page.goto('/');
-  await page.getByRole('button',{name:'Type instead'}).click();
+  await expect(page.locator('#typed')).toBeVisible();
   await page.locator('#typed').fill('Can I get the bill?');
-  await page.getByRole('button',{name:'Show me how to say it'}).click();
+  await page.getByRole('button',{name:'Turn this into Hinglish'}).click();
   await expect(page.locator('.hinglish')).toBeVisible();
   const generate=seen.find(x=>x.operation==='generate');
   expect(generate).toBeTruthy();

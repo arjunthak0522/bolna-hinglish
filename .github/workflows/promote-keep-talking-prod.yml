@@ -11,8 +11,8 @@ jobs:
     env:
       VERCEL_ORG_ID: team_gOE1H89laXqgIoZR5yusx8o8
       VERCEL_PROJECT_ID: prj_dNVPPFV0PIood9pszWxkagxSbOJP
-      NEW_PROD_URL: https://hinglish-companion-li0zd9hw9-arjunthak-4571.vercel.app
-      OLD_PROD_URL: https://hinglish-companion-cal3mdwba-arjunthak-4571.vercel.app
+      NEW_PROD_URL: https://hinglish-companion-3r5gmhdwg-arjunthak-4571.vercel.app
+      OLD_PROD_URL: https://hinglish-companion-dyutr3ayz-arjunthak-4571.vercel.app
       PROD_ALIAS: hinglish-companion.vercel.app
     steps:
       - uses: actions/setup-node@v4

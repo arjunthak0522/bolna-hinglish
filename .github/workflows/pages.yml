@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -35,3 +36,17 @@ jobs:
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Purge stored Actions artifacts
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          while true; do
+            ids=$(gh api --paginate "/repos/${REPO}/actions/artifacts?per_page=100" --jq '.artifacts[].id' | head -100)
+            [ -z "$ids" ] && break
+            while read -r id; do
+              [ -n "$id" ] && gh api --method DELETE "/repos/${REPO}/actions/artifacts/${id}"
+            done <<< "$ids"
+          done
